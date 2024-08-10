@@ -12,7 +12,6 @@ from svc.models import BaseModel, Customer
 JOB_STATUS = (
     ("Pending", "Pending"),
     ("Completed", "Completed"),
-    ("Cancelled", "Cancelled"),
 )
 
 

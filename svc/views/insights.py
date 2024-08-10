@@ -1,11 +1,14 @@
 from django.db.models import Sum
 from datetime import timedelta
+
+from django.utils import timezone
+
 from svc.models import Job, Expense, Service, JobItem, PurchaseOrder
 
 
 def get_insights(date=None, period='daily'):
     if period == 'daily':
-        start_date = end_date = date
+        start_date = end_date = timezone.localtime(timezone.now()).date()
     elif period == 'weekly':
         start_date = date - timedelta(days=date.weekday())  # Start of the week
         end_date = start_date + timedelta(days=6)  # End of the week
@@ -16,7 +19,7 @@ def get_insights(date=None, period='daily'):
 
     machining_revenue = Service.objects.filter(
         service_type='Machining',
-        job__job_completion_time__date__range=[start_date, end_date]
+        job__job_completion_time__date__range=[start_date, end_date]  # NOQA
     ).aggregate(Sum('service_cost'))['service_cost__sum'] or 0
 
     workshop_revenue = Service.objects.filter(

@@ -5,6 +5,8 @@ PLACE_CHOICES = (
     ("Chakand", "Chakand"),
     ("Bela", "Bela"),
     ("Delha", "Delha"),
-    ("Powehouse", "Powerhouse"),
+    ("Powerhouse", "Powerhouse"),
     ("Karimganj", "Karimganj"),
+    ("Gaya", "Gaya"),
+    ("Khizarsarai", "Khizarsarai"),
 )
