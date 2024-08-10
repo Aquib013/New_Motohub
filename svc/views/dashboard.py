@@ -8,20 +8,22 @@ class DashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        today = timezone.now().date()
         period = self.request.GET.get('period', 'daily')
         selected_date = self.request.GET.get('date')
 
         if selected_date:
             selected_date = timezone.datetime.strptime(selected_date, "%Y-%m-%d").date()
         else:
-            selected_date = timezone.now().date()
+            # Default to current date if no date is selected
+            selected_date = today
 
         # Get insights
         insights = get_insights(selected_date, period)
 
         # Update context with insights
         context.update(insights)
-        context['today'] = timezone.now()
+        context['today'] = timezone.now().date()
         context['selected_date'] = selected_date
         context['period'] = period
 

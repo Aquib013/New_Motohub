@@ -6,13 +6,22 @@
 <div class="container">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom">
         <h1 class="h2">Welcome, {{ user.first_name }} {{ user.last_name }}!</h1>
-        <div class="btn-lg-toolbar mb-2 mb-md-0">
+        <div class="btn-toolbar mb-2 mb-md-0">
             <div class="btn-group me-2">
-                <button onclick="setPeriod('daily')" class="btn btn-sm btn-outline-secondary">Today</button>
-                <button onclick="setPeriod('weekly')" class="btn btn-sm btn-outline-secondary">Weekly</button>
-                <button onclick="setPeriod('monthly')" class="btn btn-sm btn-outline-secondary">Monthly</button>
+                <button onclick="setPeriod('daily')"
+                        class="btn btn-sm btn-outline-dark {% if period == 'daily' %}active{% endif %}">
+                    Daily
+                </button>
+                <button onclick="setPeriod('weekly')"
+                        class="btn btn-sm btn-outline-dark {% if period == 'weekly' %}active{% endif %}">
+                    Weekly
+                </button>
+                <button onclick="setPeriod('monthly')"
+                        class="btn btn-sm btn-outline-dark {% if period == 'monthly' %}active{% endif %}">
+                    Monthly
+                </button>
             </div>
-            <input type="date" id="insight-date" onchange="setDate()" value="{{ selected_date|date:'Y-m-d' }}" class="btn btn-sm btn-outline-secondary">
+            <input type="date" id="insight-date" onchange="setDate()" class="btn btn-sm btn-outline-dark" value="{{ selected_date|date:'Y-m-d' }}">
         </div>
     </div>
 
@@ -28,8 +37,6 @@
                 </div>
             </div>
         </div>
-        <!-- Other cards for insights as previously defined -->
-        <!-- ... (the rest of your insight cards) ... -->
         <div class="col-md-3">
             <div class="card">
                 <div class="card-body">
@@ -101,6 +108,7 @@
     function setPeriod(period) {
         const url = new URL(window.location.href);
         url.searchParams.set('period', period);
+        url.searchParams.delete('date');  // Clear the date when changing period
         window.location.href = url.href;
     }
 

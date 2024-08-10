@@ -4,15 +4,15 @@ from svc.models import Job, Expense, Service, JobItem, PurchaseOrder
 
 
 def get_insights(date=None, period='daily'):
-    if period == 'weekly':
+    if period == 'daily':
+        start_date = end_date = date
+    elif period == 'weekly':
         start_date = date - timedelta(days=date.weekday())  # Start of the week
         end_date = start_date + timedelta(days=6)  # End of the week
     elif period == 'monthly':
         start_date = date.replace(day=1)  # Start of the month
         next_month = start_date.replace(month=date.month % 12 + 1, day=1)
         end_date = next_month - timedelta(days=1)  # End of the month
-    else:  # daily
-        start_date = end_date = date
 
     machining_revenue = Service.objects.filter(
         service_type='Machining',
