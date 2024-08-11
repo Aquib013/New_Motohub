@@ -3,7 +3,7 @@ VEHICLE_CHOICES = (
     ("BAJAJ", "BAJAJ"),
     ("HONDA", "HONDA"),
     ("YAMAHA", "YAMAHA"),
-    ("TVS MOTORS", "TVS MOTORS"),
+    ("TVS", "TVS"),
     ("SUZUKI", "SUZUKI"),
-    ("RoyalEnfield", "RoyalEnfield"),
+    ("Royal Enfield", "Royal Enfield"),
 )

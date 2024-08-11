@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db.models import Sum, F
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from svc.models import Item
@@ -10,6 +11,16 @@ class ItemListView(ListView):
     template_name = 'items/item_list.html'
     context_object_name = "items"
     ordering = ['-created_at']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Calculate the total inventory value
+        total_inventory_value = Item.objects.aggregate(
+            total_inventory_value=Sum(F('item_quantity_in_stock') * F('cost_price'))
+        )['total_inventory_value'] or 0
+        # Add the total_inventory_value to the context
+        context['total_inventory_value'] = total_inventory_value
+        return context
 
 
 class ItemCreateView(CreateView):
