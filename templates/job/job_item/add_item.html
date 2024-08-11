@@ -1,7 +1,12 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
+{% load static %}
 
 {% block title %}{% if form.instance.pk %}Edit Item{% else %}Add Item{% endif %}{% endblock %}
+
+{% block extra_css %}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -14,6 +19,7 @@
         <div class="card-body">
           <form method="post">
             {% csrf_token %}
+
             {% for field in form.visible_fields %}
               <div class="form-group row mb-3">
                 <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">{{ field.label }}</label>
@@ -40,4 +46,17 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#id_item').select2({
+                placeholder: 'Select an item',
+                allowClear: true
+            });
+        });
+    </script>
 {% endblock %}

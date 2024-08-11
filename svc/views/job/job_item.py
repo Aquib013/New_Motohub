@@ -12,6 +12,11 @@ class JobItemAddView(CreateView):
     form_class = JobItemForm
     template_name = 'job/job_item/add_item.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form_media'] = self.form_class().media
+        return context
+
     def form_valid(self, form):
         job_id = self.kwargs['pk']
         job = get_object_or_404(Job, pk=job_id)

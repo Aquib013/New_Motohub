@@ -3,10 +3,11 @@ from decimal import Decimal
 from django.db import models
 from django.db.models import F
 
-from svc.models import BaseModel, Employee
+from svc.models import BaseModel, Employee, Vendor
 
 EXPENSE_TYPE = [
     ("Employee Payment", "Employee Payment"),
+    ("Vendor Payment", "Vendor Payment"),
     ("Other", "Other")
 ]
 
@@ -16,6 +17,8 @@ class Expense(BaseModel):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     employee = models.ForeignKey(Employee, related_name="employee_payments",
                                  on_delete=models.SET_NULL, null=True)
+    vendor = models.ForeignKey(Vendor, related_name="vendor_payments",
+                               on_delete=models.SET_NULL, null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
     expense_title = models.CharField(null=True, blank=True)
 
@@ -36,6 +39,12 @@ class Expense(BaseModel):
                 self.update_employee_dues_advance()
             else:
                 self.update_employee_dues_advance_on_edit(old_amount)       # NOQA
+
+        elif self.expense_type == "Vendor Payment":
+            if is_new:
+                self.update_vendor_balance()
+            else:
+                self.update_vendor_balance_on_edit(old_amount)     # NOQA
 
     def update_employee_dues_advance(self):
         employee = self.employee
@@ -95,3 +104,23 @@ class Expense(BaseModel):
             employee.emp_dues = 0
             employee.emp_advance = 0
             employee.save(update_fields=['emp_dues', 'emp_advance'])   # NOQA
+
+    def update_vendor_balance(self):
+        vendor = self.vendor
+        amount = self.amount
+
+        vendor.vendor_balance = F('vendor_balance') - amount
+        vendor.last_payment_date = self.created_at
+        vendor.last_payment_amount = amount
+
+        vendor.save(update_fields=['vendor_balance', 'last_payment_date', 'last_payment_amount'])  # NOQA
+        vendor.refresh_from_db(fields=['vendor_balance'])    # NOQA
+
+    def update_vendor_balance_on_edit(self, old_amount):
+        vendor = self.vendor
+        new_amount = self.amount
+        difference = new_amount - old_amount          # NOQA
+
+        vendor.vendor_balance = F('vendor_balance') - difference
+        vendor.save(update_fields=['vendor_balance'])                # NOQA
+        vendor.refresh_from_db(fields=['vendor_balance'])            # NOQA

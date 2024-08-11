@@ -1,6 +1,7 @@
 from django import forms
+from django_select2 import forms as s2forms
 
-from svc.models import Job, JobItem, Customer
+from svc.models import Job, JobItem, Customer, Item
 from svc.models.customer import CUSTOMER_CHOICE
 
 
@@ -67,6 +68,10 @@ class JobForm(forms.ModelForm):
 
 class JobItemForm(forms.ModelForm):
     job_hidden = forms.CharField(widget=forms.HiddenInput(), required=False)
+    item = forms.ModelChoiceField(
+        queryset=Item.objects.all(),
+        widget=s2forms.Select2Widget
+    )
 
     class Meta:
         model = JobItem

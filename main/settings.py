@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "svc",
     'widget_tweaks',
-
+    'django_select2',
 ]
 
 MIDDLEWARE = [
@@ -153,3 +153,8 @@ LOGOUT_REDIRECT_URL = "login"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+SELECT2_JS = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js'
+SELECT2_CSS = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css'
+SELECT2_I18N_PATH = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n'

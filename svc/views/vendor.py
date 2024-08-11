@@ -4,8 +4,8 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, ListView, DeleteView, UpdateView, DetailView
 
-from svc.forms import VendorForm, VendorPaymentForm
-from svc.models import Vendor, VendorPayment, PurchaseOrder
+from svc.forms import VendorForm
+from svc.models import Vendor, PurchaseOrder, Expense
 
 
 class VendorCreateView(CreateView):
@@ -35,30 +35,6 @@ class VendorDeleteView(DeleteView):
     success_url = reverse_lazy("vendors")
 
 
-class VendorPaymentCreateView(CreateView):
-    model = VendorPayment
-    template_name = "vendor/vendor_payment.html"
-    form_class = VendorPaymentForm
-    success_url = reverse_lazy("vendors")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        vendor = get_object_or_404(Vendor, pk=self.kwargs['pk'])
-        context['vendor'] = vendor
-        return context
-
-    def form_valid(self, form):
-        vendor = get_object_or_404(Vendor, pk=self.kwargs['pk'])
-        form.instance.vendor = vendor
-        vendor.vendor_balance -= form.instance.pay_amount
-        vendor.last_payment_date = timezone.now()
-        vendor.last_payment_amount = form.instance.pay_amount
-        vendor.save()
-        messages.success(self.request, "Payment Added successfully.")
-
-        return super().form_valid(form)
-
-
 class VendorPaymentHistoryView(DetailView):
     model = Vendor
     template_name = 'vendor/vendor_payment_history.html'
@@ -68,7 +44,7 @@ class VendorPaymentHistoryView(DetailView):
         context = super().get_context_data(**kwargs)
         vendor = self.get_object()
         # Ordering the related payments by created_at
-        payments = vendor.vendor_payments.all().order_by('-created_at')
+        payments = Expense.objects.filter(expense_type="Vendor Payment", vendor=vendor).order_by('-created_at')
         context['payments'] = payments
         return context
 

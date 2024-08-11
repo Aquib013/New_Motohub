@@ -23,7 +23,7 @@
                   {% for payment in payments %}
                   <tr>
                     <td>{{ payment.created_at|date:"F d, Y" }}</td>
-                    <td>Rs.{{ payment.pay_amount|floatformat:2 }}</td>
+                    <td>Rs.{{ payment.amount|floatformat:2 }}</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -36,7 +36,6 @@
           {% endif %}
         </div>
         <div class="card-footer">
-          <a href="{% url 'vendor-payment' vendor.pk %}" class="btn btn-primary">Make Payment</a>
           <a href="{% url 'vendors' %}" class="btn btn-secondary ml-2">Back</a>
         </div>
       </div>

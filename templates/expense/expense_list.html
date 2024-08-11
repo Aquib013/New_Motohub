@@ -17,7 +17,7 @@
                 <tr>
                   <th>Expense Type</th>
                   <th>Expense Date
-                  <th>Employee/Other</th>
+                  <th>Employee/Vendor/Other</th>
                   <th>Amount</th>
                   <th>Comment</th>
                   <th>Actions</th>
@@ -31,6 +31,8 @@
                   <td>
                     {% if expense.expense_type == 'Employee Payment' %}
                       {{ expense.employee.emp_name }}
+                    {% elif expense.expense_type == 'Vendor Payment' %}
+                      {{ expense.vendor.firm_name }}
                     {% elif expense.expense_type == 'Other' %}
                       {{ expense.expense_title }}
                     {% endif %}

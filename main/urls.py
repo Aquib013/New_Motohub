@@ -27,5 +27,6 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("", DashboardView.as_view(), name="dashboard"),
     path('', RedirectView.as_view(url='/accounts/login/', permanent=False)),  # Redirect all other URLs to login
+    path("select2/", include("django_select2.urls")),
 
 ]

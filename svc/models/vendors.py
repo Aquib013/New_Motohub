@@ -1,9 +1,6 @@
 from decimal import Decimal
 from django.db import models
 from django.db.models import Sum, Max
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
-
 from svc.models import BaseModel
 
 
@@ -29,25 +26,3 @@ class Vendor(BaseModel):
         return self.firm_name
 
 
-class VendorPayment(BaseModel):
-    vendor = models.ForeignKey(Vendor, related_name="vendor_payments", on_delete=models.CASCADE)
-    pay_amount = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.vendor}-{self.pay_amount}"
-
-
-# @receiver(post_save, sender=VendorPayment)
-# def update_vendor_balance(sender, instance, **kwargs):
-#     pay_amount = instance.pay_amount
-#     instance.vendor.vendor_balance -= pay_amount
-#     instance.vendor.last_payment_amount = instance.pay_amount
-#     instance.vendor.last_payment_date = instance.created_at
-#     instance.vendor.save()
-#
-#
-# @receiver(post_delete, sender=VendorPayment)
-# def update_vendor_balance(sender, instance, **kwargs):
-#     pay_amount = instance.pay_amount
-#     instance.vendor.vendor_balance += pay_amount
-#     instance.vendor.save()

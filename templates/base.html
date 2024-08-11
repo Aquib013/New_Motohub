@@ -11,12 +11,14 @@
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
 
     <style>
     .bg-completed { background-color: #28a745; }
     .bg-in.progress { background-color: #ffc107; }
     .bg-pending { background-color: #17a2b8; }
     </style>
+
 </head>
 <body>
 {% if messages %}
@@ -228,5 +230,7 @@ function getCookie(name) {
     <script src="{% static 'js/jquery-3.5.1.slim.min.js' %}"></script>
     <script src="{% static 'js/popper.min.js' %}"></script>
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+
 </body>
 </html>

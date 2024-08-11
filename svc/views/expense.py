@@ -21,10 +21,15 @@ class ExpenseCreateUpdateView(CreateView, UpdateView):
     def get_initial(self):
         initial = super().get_initial()
         expense = self.get_object() if self.kwargs.get('pk') else None
-        if expense and expense.expense_type == 'Other':
-            initial['specify_other'] = expense.expense_title
-        elif expense and expense.expense_type == "Employee Payment":
-            initial["employee"] = expense.employee
+
+        if expense:
+            if expense.expense_type == 'Other':
+                initial['specify_other'] = expense.expense_title
+            elif expense.expense_type == "Employee Payment":
+                initial["employee"] = expense.employee
+            elif expense.expense_type == "Vendor Payment":
+                initial["vendor"] = expense.vendor
+
         return initial
 
     def form_valid(self, form):
@@ -39,6 +44,18 @@ class ExpenseCreateUpdateView(CreateView, UpdateView):
                 employee.emp_last_payment_date = expense.created_at
 
                 employee.save()
+
+        elif expense.expense_type == "Vendor Payment":
+            expense.vendor = form.cleaned_data['vendor']
+            vendor = form.cleaned_data['vendor']
+            if vendor:
+                expense.created_at = timezone.now()
+
+                vendor.last_payment_amount = expense.amount
+                vendor.last_payment_date = expense.created_at
+
+                vendor.save()
+
         elif expense.expense_type == "Other":
             expense.expense_title = form.cleaned_data["specify_other"]
         expense.save()

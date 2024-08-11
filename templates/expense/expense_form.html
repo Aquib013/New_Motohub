@@ -42,10 +42,17 @@
 document.addEventListener('DOMContentLoaded', function() {
     const expenseTypeSelect = document.getElementById('expense_type');
     const dynamicField = document.getElementById('dynamic_field');
+
     const employeeField = `
         <div class="form-group">
             <label for="{{ form.employee.id_for_label }}">Employee:</label>
             {{ form.employee }}
+        </div>
+    `;
+    const vendorField = `
+        <div class="form-group">
+            <label for="{{ form.vendor.id_for_label }}">Vendor:</label>
+            {{ form.vendor }}
         </div>
     `;
     const specifyOtherField = `
@@ -58,6 +65,8 @@ document.addEventListener('DOMContentLoaded', function() {
     expenseTypeSelect.addEventListener('change', function() {
         if (this.value === 'Employee Payment') {
             dynamicField.innerHTML = employeeField;
+        } else if (this.value === 'Vendor Payment') {
+            dynamicField.innerHTML = vendorField;
         } else if (this.value === 'Other') {
             dynamicField.innerHTML = specifyOtherField;
         } else {
