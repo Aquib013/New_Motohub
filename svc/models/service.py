@@ -31,6 +31,7 @@ WORKSHOP_CHOICES = (
     ("Disc Repairing", "Disc Repairing"),
     ("Front Shocker Repairing", "Front Shocker Repairing"),
     ("Welding", "Welding"),
+    ("Self Repairing", "Self Repairing"),
     ("Half Engine Repairing", "Half Engine Repairing"),
     ("Full Engine Repairing", "Full Engine Repairing"),
     ("Miscellaneous Service Charge", "Miscellaneous Service Charge"),

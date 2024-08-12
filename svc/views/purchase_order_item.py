@@ -36,6 +36,8 @@ class PurchaseOrderItemCreateView(CreateView):
         purchase_order_id = self.kwargs.get('pk')
         purchase_order = PurchaseOrder.objects.get(id=purchase_order_id)
         context['purchase_order'] = purchase_order
+        context['form_media'] = self.form_class().media
+
         return context
 
 
@@ -62,4 +64,6 @@ class PurchaseOrderItemUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['purchase_order'] = self.object.purchase_order
+        context['form_media'] = self.form_class().media
+
         return context

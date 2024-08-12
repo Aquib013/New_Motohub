@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
+{% load static %}
+
 {% block title %}{% if form.instance.pk %}Edit Service{% else %}Add Service{% endif %}{% endblock %}
+
+{% block extra_css %}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -75,4 +81,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+{% endblock %}
+{% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#id_vehicle').select2({
+                placeholder: 'Select a vehicle type',
+                allowClear: true
+            });
+        });
+    </script>
 {% endblock %}

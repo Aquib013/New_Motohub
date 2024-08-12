@@ -1,9 +1,15 @@
 from django import forms
+from django_select2 import forms as s2forms
 
-from svc.models import PurchaseOrderItem
+from svc.models import PurchaseOrderItem, Item
 
 
 class PurchaseOrderItemForm(forms.ModelForm):
+    item = forms.ModelChoiceField(
+        queryset=Item.objects.all(),
+        widget=s2forms.Select2Widget
+    )
+
     class Meta:
         model = PurchaseOrderItem
         fields = ["item", "item_MRP", "quantity", "discount_percentage", "net_price"]

@@ -45,6 +45,8 @@ class ServiceCreateView(FormView):
         context['job'] = get_object_or_404(Job, pk=self.kwargs['pk'])
         context['machining_choices'] = json.dumps(MACHINING_CHOICES)
         context['workshop_choices'] = json.dumps(WORKSHOP_CHOICES)
+        context['form_media'] = self.form_class().media
+
         return context
 
 

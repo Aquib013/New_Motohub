@@ -1,11 +1,17 @@
 from django import forms
+from django_select2 import forms as s2forms
 
-from svc.models import Service, Job
+
+from svc.models import Service, Job, Vehicle
 from svc.models.service import MACHINING_CHOICES, WORKSHOP_CHOICES
 
 
 class ServiceForm(forms.ModelForm):
     job_hidden = forms.CharField(widget=forms.HiddenInput(), required=True)
+    vehicle = forms.ModelChoiceField(
+                        queryset=Vehicle.objects.all(),
+                        widget=s2forms.Select2Widget
+    )
 
     class Meta:
         model = Service
