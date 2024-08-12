@@ -1,0 +1,27 @@
+{% for item in items %}
+<tr class="{% if item.item_quantity_in_stock == 0 %}table-danger{% elif item.item_quantity_in_stock < 2 %}table-warning{% endif %}">
+    <td>{{ item.item_name }}</td>
+    <td>{{ item.item_for_vehicle }}</td>
+    <td>{{ item.item_type }}</td>
+    <td>{{ item.item_quantity_in_stock }}</td>
+    <td>{{ item.item_MRP }}</td>
+    <td>{{ item.cost_price }}</td>
+    <td>
+        <div class="d-flex flex-column flex-md-row justify-content-center gap-2">
+            <a href="{% url 'item-detail' item.pk %}" class="btn btn-sm btn-info mb-1 mb-md-0">
+                <i class="fas fa-eye mr-1"></i>View
+            </a>
+            <a href="{% url 'item-update' item.pk %}" class="btn btn-sm btn-warning mb-1 mb-md-0">
+                <i class="fas fa-edit mr-1"></i>Edit
+            </a>
+            <a href="{% url 'item-delete' item.pk %}" class="btn btn-sm btn-danger mb-1 mb-md-0">
+                <i class="fas fa-trash mr-1"></i>Delete
+            </a>
+        </div>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="7" class="text-center">No items found.</td>
+</tr>
+{% endfor %}

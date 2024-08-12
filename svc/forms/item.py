@@ -1,8 +1,16 @@
 from django import forms
-from svc.models import Item
+from django_select2 import forms as s2forms
+
+
+from svc.models import Item, Vehicle
 
 
 class ItemForm(forms.ModelForm):
+    item_for_vehicle = forms.ModelChoiceField(
+                        queryset=Vehicle.objects.all(),
+                        widget=s2forms.Select2Widget
+    )
+
     class Meta:
         model = Item
         fields = ['item_brand', 'item', 'item_size', "item_type", 'item_for_vehicle', 'item_quantity_in_stock',

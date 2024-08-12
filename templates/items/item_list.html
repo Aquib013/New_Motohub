@@ -12,49 +12,28 @@
                     <a href="{% url 'item-create' %}" class="btn btn-success btn-lg">Add New Item</a>
                 </div>
                 <div class="card-body">
+                    <form id="search-form" method="get" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" id="search-input" name="q" class="form-control" placeholder="Search items..." value="{{ request.GET.q }}">
+                        </div>
+                    </form>
                     <h4>Total Inventory Value: ₹{{ total_inventory_value }}</h4>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive" id="item-list">
                     <table class="table table-hover">
-                        <thead class="table-secondary ">
-                        <tr>
-                            <th>Name</th>
-                            <th>Suited For</th>
-                            <th>Type</th>
-                            <th>Quantity</th>
-                            <th>MRP</th>
-                            <th>Cost Price</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>Name</th>
+                                <th>Suited For</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>MRP</th>
+                                <th>Cost Price</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        {% for item in items %}
-                        <tr class="{% if item.item_quantity_in_stock == 0 %}table-danger{% elif item.item_quantity_in_stock < 2 %}table-warning{% endif %}">
-                            <td>{{ item.item_name }}</td>
-                            <td>{{ item.item_for_vehicle }}</td>
-                            <td>{{ item.item_type }}</td>
-                            <td>{{ item.item_quantity_in_stock }}</td>
-                            <td>{{ item.item_MRP }}</td>
-                            <td>{{ item.cost_price }}</td>
-                            <td>
-                                <div class="d-flex flex-column flex-md-row justify-content-center gap-2">
-                                    <a href="{% url 'item-detail' item.pk %}" class="btn btn-sm btn-info mb-1 mb-md-0">
-                                        <i class="fas fa-view mr-1"></i>View
-                                    </a>
-                                    <a href="{% url 'item-update' item.pk %}" class="btn btn-sm btn-warning mb-1 mb-md-0">
-                                        <i class="fas fa-edit mr-1"></i>Edit
-                                    </a>
-                                    <a href="{% url 'item-delete' item.pk %}" class="btn btn-sm btn-danger mb-1 mb-md-0">
-                                        <i class="fas fa-trash mr-1"></i>Delete
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="10" class="text-center">No items found.</td>
-                        </tr>
-                        {% endfor %}
+                            {% include 'items/partial_item_list.html' %}
                         </tbody>
                     </table>
                 </div>
@@ -62,4 +41,22 @@
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#search-input').on('keyup', function() {
+            var query = $(this).val();
+            $.ajax({
+                url: '',  // This will send the request to the current URL
+                data: {
+                    'q': query
+                },
+                success: function(data) {
+                    $('#item-list').html(data.html);
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

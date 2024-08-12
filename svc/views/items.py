@@ -1,5 +1,7 @@
 from django.contrib import messages
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Q
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from svc.models import Item
@@ -12,6 +14,13 @@ class ItemListView(ListView):
     context_object_name = "items"
     ordering = ['-created_at']
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+        if query:
+            queryset = queryset.filter(item_name__icontains=query)
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Calculate the total inventory value
@@ -22,12 +31,23 @@ class ItemListView(ListView):
         context['total_inventory_value'] = total_inventory_value
         return context
 
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            html = render_to_string('items/partial_item_list.html', context, self.request)
+            return JsonResponse({'html': html})
+        return super().render_to_response(context, **response_kwargs)
+
 
 class ItemCreateView(CreateView):
     model = Item
     form_class = ItemForm
     template_name = 'items/item_form.html'
     success_url = reverse_lazy('item-list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form_media'] = self.form_class().media
+        return context
 
     def form_valid(self, form):
         item = form.save(commit=False)
