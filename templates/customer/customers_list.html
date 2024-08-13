@@ -19,9 +19,9 @@
                             <thead class="thead-light">
                             <tr>
                                 <th>Name</th>
-                                <th>Contact</th>
-                                <th>Type</th>
                                 <th>Place</th>
+                                <th>Type</th>
+                                <th>Contact</th>
                                 <th class="text-right">Balance</th>
                                 <th class="text-right">Total Dues</th>
                                 <th class="text-right">Last Billed Amount</th>
@@ -33,9 +33,9 @@
                             {% for customer in customers %}
                             <tr>
                                 <td>{{ customer.customer_name }}</td>
-                                <td>{{ customer.customer_mob_no }}</td>
-                                <td>{{ customer.customer_type }}</td>
                                 <td>{{ customer.place }}</td>
+                                <td>{{ customer.customer_type }}</td>
+                                <td>{{ customer.customer_mob_no }}</td>
                                 <td class="text-right">{{ customer.balance|floatformat:2 }}</td>
                                 <td class="text-right">{{ customer.dues|floatformat:2 }}</td>
                                 <td class="text-right">{{ customer.last_billed_amount|floatformat:2 }}</td>
