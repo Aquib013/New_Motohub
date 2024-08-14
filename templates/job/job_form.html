@@ -1,147 +1,96 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
-{% load static %}
 
-{% block title %}
-    {% if form.instance.pk %}Update Job{% else %}Create Job{% endif %}
-{% endblock %}
-
-{% block extra_css %}
-    {{ form.media.css }}
-    <style>
-        .form-container {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .form-title {
-            color: #007bff;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-control, .form-select, .select2-container .select2-selection--single {
-            height: 45px;
-            border-radius: 5px;
-        }
-        .select2-container .select2-selection--single {
-            display: flex;
-            align-items: center;
-        }
-        .btn-submit {
-            width: 100%;
-            height: 45px;
-        }
-        .btn-cancel {
-            width: 100%;
-            height: 45px;
-        }
-    </style>
-{% endblock %}
+{% block title %}{% if form.instance.pk %}Update Job{% else %}Create Job{% endif %}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="form-container">
-                <h2 class="form-title">
-                    {% if form.instance.pk %}Update Job{% else %}Create Job{% endif %}
-                </h2>
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="row">
-                        {% for field in form %}
-                            {% if field.name == 'add_payment' %}
-                                <div id="payment-container" class="col-md-6 form-group" style="display:none;">
-                                    {{ field.label_tag }}
-                                    {% render_field field class="form-control" placeholder=field.label %}
-                                    {% if field.errors %}
-                                        <small class="form-text text-danger">{{ field.errors.0 }}</small>
-                                    {% endif %}
-                                </div>
-                            {% elif field.name == 'customer' %}
-                                <div class="col-md-6 form-group">
-                                    {{ field.label_tag }}
-                                    {{ field }}
-                                    {% if field.errors %}
-                                        <small class="form-text text-danger">{{ field.errors.0 }}</small>
-                                    {% endif %}
-                                </div>
-                            {% else %}
-                                <div class="col-md-6 form-group">
-                                    {{ field.label_tag }}
-                                    {% if field.name == 'status' %}
-                                        {% render_field field class="form-select" %}
-                                    {% else %}
-                                        {% render_field field class="form-control" placeholder=field.label %}
-                                    {% endif %}
-                                    {% if field.errors %}
-                                        <small class="form-text text-danger">{{ field.errors.0 }}</small>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
+<div class="container mt-4">
+    <h2 class="mb-4">{% if form.instance.pk %}Update Job{% else %}Create Job{% endif %}</h2>
+    <form method="post">
+        {% csrf_token %}
+            <div class="row">
+            {% for field in form %}
+                {% if field.name == 'add_payment' %}
+                    <div id="payment-container" class="col-md-6 mb-3" style="display:none;">
+                        {{ field.label_tag }}
+                        {% render_field field class="form-control" %}
+                        {% if field.errors %}
+                            <small class="form-text text-danger">{{ field.errors.0 }}</small>
+                        {% endif %}
                     </div>
-
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <button type="submit" class="btn btn-primary btn-submit">Submit</button>
-                        </div>
-                        <div class="col-md-6">
-                            <a href="{% url 'jobs' %}" class="btn btn-secondary btn-cancel">Cancel</a>
-                        </div>
+                {% else %}
+                    <div class="col-md-6 mb-3">
+                        {{ field.label_tag }}
+                        {% if field.name == 'status' or field.name == 'customer' %}
+                            {% render_field field class="form-select" %}
+                        {% else %}
+                            {% render_field field class="form-control" %}
+                        {% endif %}
+                        {% if field.errors %}
+                            <small class="form-text text-danger">{{ field.errors.0 }}</small>
+                        {% endif %}
                     </div>
-                </form>
-            </div>
+                {% endif %}
+            {% endfor %}
         </div>
-    </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a href="{% url 'jobs' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
 </div>
-{% endblock %}
 
-{% block extra_js %}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    {{ form.media.js }}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var statusField = document.getElementById('id_status');
-        var paymentContainer = document.getElementById('payment-container');
-        var customerTypeSelect = document.getElementById('id_customer_type');
-        var customerSelect = document.querySelector('#id_customer');
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var statusField = document.getElementById('id_status');
+    var paymentContainer = document.getElementById('payment-container');
 
-        function togglePaymentField() {
-            if (statusField.value === 'Completed') {
-                paymentContainer.style.display = 'block';
-            } else {
-                paymentContainer.style.display = 'none';
-                document.getElementById('id_add_payment').value = '';
-            }
-        }
-
-        function updateCustomerOptions() {
-            var customerType = customerTypeSelect.value;
-            if (customerType) {
-                $(customerSelect).val(null).trigger('change');
-                customerSelect.disabled = false;
-            } else {
-                $(customerSelect).val(null).trigger('change');
-                customerSelect.disabled = true;
-            }
-        }
-
-        customerTypeSelect.addEventListener('change', updateCustomerOptions);
-
-        // Initial call to set up the form correctly
-        if (customerTypeSelect.value) {
-            updateCustomerOptions();
+    function togglePaymentField() {
+        if (statusField.value === 'Completed') {
+            paymentContainer.style.display = 'block';
         } else {
+            paymentContainer.style.display = 'none';
+            document.getElementById('id_add_payment').value = '';
+        }
+    }
+
+    var customerTypeSelect = document.getElementById('id_customer_type');
+    var customerSelect = document.getElementById('id_customer');
+
+    function updateCustomerOptions() {
+        var customerType = customerTypeSelect.value;
+
+        if (customerType) {
+            fetch(`{% url 'get-customers' %}?type=${customerType}`)
+                .then(response => response.json())
+                .then(data => {
+                    var currentCustomer = customerSelect.value;
+                    customerSelect.innerHTML = '<option value="">Select a customer</option>';
+                    data.forEach(customer => {
+                        var option = new Option(customer.name, customer.id);
+                        if (customer.id == currentCustomer) {
+                            option.selected = true;
+                        }
+                        customerSelect.add(option);
+                    });
+                    customerSelect.disabled = false;
+                });
+        } else {
+            customerSelect.innerHTML = '<option value="">Select a customer</option>';
             customerSelect.disabled = true;
         }
+    }
 
-        statusField.addEventListener('change', togglePaymentField);
-        togglePaymentField();  // Call once to set initial state
-    });
-    </script>
+    customerTypeSelect.addEventListener('change', updateCustomerOptions);
+
+    // Initial call to set up the form correctly
+    if (customerTypeSelect.value) {
+        updateCustomerOptions();
+    }
+
+    statusField.addEventListener('change', togglePaymentField);
+    togglePaymentField();  // Call once to set initial state
+});
+</script>
 {% endblock %}

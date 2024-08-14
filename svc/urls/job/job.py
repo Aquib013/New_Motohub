@@ -1,10 +1,12 @@
 from django.urls import path
-from svc.views.job.job import JobCreateView, JobListView, JobDetailView, JobUpdateView, generate_invoice, JobDeleteView
+from svc.views.job.job import JobCreateView, JobListView, JobDetailView, JobUpdateView, generate_invoice, JobDeleteView, \
+    get_customers
 from svc.views.job.job_item import JobItemAddView, JobItemEditView, JobItemDeleteView
 from svc.views.services import ServiceCreateView, ServiceUpdateView, ServiceDeleteView
 
 job_url_patterns = [
     path("jobs/create-job/", JobCreateView.as_view(), name="create_job"),
+    path('get-customers/', get_customers, name='get-customers'),
     path('job/<int:pk>/add-service/', ServiceCreateView.as_view(), name='add_service'),
     path("jobs/", JobListView.as_view(), name="jobs"),
     path("jobs/<int:pk>/", JobDetailView.as_view(), name="job_detail"),

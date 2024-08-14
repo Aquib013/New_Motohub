@@ -12,7 +12,6 @@ class PurchaseOrderListView(ListView):
     ordering = ['-created_at']
 
 
-
 class PurchaseOrderCreateView(CreateView):
     model = PurchaseOrder
     form_class = PurchaseOrderForm
@@ -42,5 +41,3 @@ class PurchaseOrderDeleteView(DeleteView):
     model = PurchaseOrder
     template_name = 'purchase_order/purchase_order_confirm_delete.html'
     success_url = reverse_lazy('purchase-orders')
-
-
