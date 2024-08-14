@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
@@ -32,15 +32,21 @@ class Job(BaseModel):
 
     @staticmethod
     def unique_job_no():
+        today = datetime.now()
         date = datetime.now().date().strftime("%d%m%Y")
-        last_job = Job.objects.filter().order_by("-created_at").first()
-        if last_job is None:
-            last_job_id = 0
-        else:
-            last_job_id = last_job.id
-        counter = last_job_id + 1
-        job_no = f"{date}-{counter}"
-        return job_no
+        with transaction.atomic():
+            # Lock the row for update to avoid race conditions
+            last_job = Job.objects.filter(created_at__date=today).select_for_update().order_by("-created_at").first()
+            if last_job is None:
+                counter = 1
+            else:
+                # Extract the counter from the last job_no and increment it
+                last_job_no = last_job.job_no
+                last_counter = int(last_job_no.split("-")[1])
+                counter = last_counter + 1
+
+            job_no = f"{date}-{counter}"
+            return job_no
 
     def save(self, *args, **kwargs):
         if not self.job_no:

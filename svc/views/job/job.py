@@ -2,11 +2,10 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
-from django.views import View
 from django.views.generic import (
     CreateView,
     ListView,
@@ -15,7 +14,7 @@ from django.views.generic import (
     DetailView,
 )
 
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from weasyprint import HTML
 
 from svc.models import Job, Service, Customer
@@ -27,7 +26,6 @@ class JobCreateView(CreateView):
     model = Job
     form_class = JobForm
     template_name = "job/job_form.html"
-    success_url = reverse_lazy("jobs")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -38,7 +36,7 @@ class JobCreateView(CreateView):
         job = form.save(commit=False)
         job.save()
         messages.success(self.request, "Job Created Successfully.")
-        return super().form_valid(form)
+        return redirect(reverse('job_detail', kwargs={'pk': job.pk}))
 
     def form_invalid(self, form):
         # Collect all form errors and add them as messages
@@ -46,13 +44,6 @@ class JobCreateView(CreateView):
             for error in errors:
                 messages.error(self.request, f"{form.fields[field].label}: {error}")
         return super().form_invalid(form)
-
-
-def get_customers(request):
-    customer_type = request.GET.get('type')
-    customers = Customer.objects.filter(customer_type=customer_type).values('id', 'customer_name', 'place')
-    customer_list = [{'id': c['id'], 'name': f"{c['customer_name']} - {c['place']}"} for c in customers]
-    return JsonResponse(list(customer_list), safe=False)
 
 
 class JobListView(ListView):

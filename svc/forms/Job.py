@@ -1,13 +1,41 @@
 from django import forms
+from django.db.models import Q
 from django_select2 import forms as s2forms
 
 from svc.models import Job, JobItem, Customer, Item
 from svc.models.customer import CUSTOMER_CHOICE
 
 
+class CustomerWidget(s2forms.ModelSelect2Widget):
+    search_fields = [
+        "customer_name__icontains",
+        "customer_mob_no__icontains",
+    ]
+    dependent_fields = {'customer_type': 'customer_type'}
+
+    def filter_queryset(self, request, term, queryset=None, **dependent_fields):
+        if queryset is None:
+            queryset = self.get_queryset()
+        customer_type = dependent_fields.get('customer_type')
+        if customer_type:
+            queryset = queryset.filter(customer_type=customer_type)
+        if term:
+            return queryset.filter(
+                Q(customer_name__icontains=term) | Q(customer_mob_no__icontains=term)
+            )
+        return queryset
+
+
 class JobForm(forms.ModelForm):
     customer_type = forms.ChoiceField(choices=[('', 'Select customer type')] + CUSTOMER_CHOICE,
                                       required=False, label="Customer Type")
+
+    customer = forms.ModelChoiceField(
+        queryset=Customer.objects.none(),
+        widget=forms.Select(attrs={'class': 'form-control select2'}),
+        required=False
+    )
+
     add_payment = forms.DecimalField(max_digits=10, decimal_places=2, required=False, label="Add Payment")
 
     class Meta:
@@ -20,11 +48,13 @@ class JobForm(forms.ModelForm):
         self.fields['customer_type'].widget.attrs.update({'class': 'form-control'})
 
         self.fields['customer'] = forms.ModelChoiceField(
-            queryset=Customer.objects.none(),
-            widget=forms.Select(attrs={'class': 'form-control', 'disabled': 'disabled'}),
-            empty_label="Select a customer"
+            queryset=Customer.objects.all(),
+            widget=CustomerWidget(
+                attrs={'class': 'form-control', 'data-placeholder': 'Select a customer'},
+                dependent_fields={'customer_type': 'customer_type'},
+            ),
+            required=False,
         )
-
         self.fields['license_plate'].widget.attrs.update({
             'placeholder': 'Enter vehicle number',
         })
