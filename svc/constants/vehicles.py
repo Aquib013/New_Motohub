@@ -6,5 +6,6 @@ VEHICLE_CHOICES = (
     ("TVS", "TVS"),
     ("SUZUKI", "SUZUKI"),
     ("Royal Enfield", "Royal Enfield"),
+    ("Mahindra", "Mahindra"),
     ("Universal", "Universal"),
 )
