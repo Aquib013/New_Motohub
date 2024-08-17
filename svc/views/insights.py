@@ -8,7 +8,7 @@ from svc.models import Job, Expense, Service, JobItem, PurchaseOrder
 
 def get_insights(date=None, period='daily'):
     if period == 'daily':
-        start_date = end_date = timezone.localtime(timezone.now()).date()
+        start_date = end_date = date
     elif period == 'weekly':
         start_date = date - timedelta(days=date.weekday())  # Start of the week
         end_date = start_date + timedelta(days=6)  # End of the week
