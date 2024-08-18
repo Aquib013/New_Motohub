@@ -32,5 +32,8 @@ class Item(BaseModel):
             raise ValueError("Please enter either Discount percentage or Net price")
         super().save(*args, **kwargs)
 
+    def is_low_stock(self):
+        return self.item_quantity_in_stock < 2
+
     def __str__(self):
         return self.item_name

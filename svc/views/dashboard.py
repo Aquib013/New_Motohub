@@ -1,5 +1,7 @@
 from django.utils import timezone
 from django.views.generic import TemplateView
+
+from svc.models import Item
 from svc.views.insights import get_insights
 
 
@@ -21,8 +23,11 @@ class DashboardView(TemplateView):
         # Get insights
         insights = get_insights(selected_date, period)
 
+        low_stock_items = Item.objects.filter(item_quantity_in_stock__lt=2)
+
         # Update context with insights
         context.update(insights)
+        context['low_stock_items'] = low_stock_items
         context['today'] = timezone.now().date()
         context['selected_date'] = selected_date
         context['period'] = period

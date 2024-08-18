@@ -25,6 +25,39 @@
         </div>
     </div>
 
+    {% if low_stock_items %}
+    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+        <div>
+            <strong>Low Stock Alert:</strong> {{ low_stock_items.count }} items are low in stock.
+        </div>
+        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#lowStockModal">
+            View Details
+        </button>
+    </div>
+
+    <!-- Modal for Low Stock Items -->
+    <div class="modal fade" id="lowStockModal" tabindex="-1" aria-labelledby="lowStockModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="lowStockModalLabel">Low Stock Items</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul>
+                        {% for item in low_stock_items %}
+                            <li>{{ item.item_name }} - Quantity: {{ item.item_quantity_in_stock }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row">
         <h2 class="mb-4">Insights from {{ start_date|date:"F j, Y" }} to {{ end_date|date:"F j, Y" }}</h2>
         <!-- Cards displaying insights -->
