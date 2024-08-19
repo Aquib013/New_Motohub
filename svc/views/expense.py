@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -78,6 +79,22 @@ class ExpenseListView(ListView):
     template_name = "expense/expense_list.html"
     context_object_name = "expenses"
     ordering = ['-created_at']
+
+    def get_queryset(self):
+        # Get the date from the query params or use today's date
+        selected_date = self.request.GET.get('date', timezone.now().date())
+
+        # Filter jobs by the selected date
+        queryset = Expense.objects.filter(
+            Q(created_at__date=selected_date)
+        ).order_by('-created_at')
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['selected_date'] = self.request.GET.get('date', timezone.now().date())
+        return context
 
 
 class ExpenseDeleteView(DeleteView):

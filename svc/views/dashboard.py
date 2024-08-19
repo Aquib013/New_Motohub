@@ -23,7 +23,7 @@ class DashboardView(TemplateView):
         # Get insights
         insights = get_insights(selected_date, period)
 
-        low_stock_items = Item.objects.filter(item_quantity_in_stock__lt=2)
+        low_stock_items = Item.objects.filter(item_quantity_in_stock__lt=1)
 
         # Update context with insights
         context.update(insights)

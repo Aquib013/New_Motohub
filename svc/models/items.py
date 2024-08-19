@@ -33,7 +33,7 @@ class Item(BaseModel):
         super().save(*args, **kwargs)
 
     def is_low_stock(self):
-        return self.item_quantity_in_stock < 2
+        return self.item_quantity_in_stock < 1
 
     def __str__(self):
         return self.item_name

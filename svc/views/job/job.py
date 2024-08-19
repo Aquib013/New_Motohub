@@ -2,10 +2,11 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.views import View
 from django.views.generic import (
     CreateView,
@@ -60,10 +61,22 @@ class JobListView(ListView):
     context_object_name = "jobs"
     ordering = ['-created_at']
 
+    def get_queryset(self):
+        # Get the date from the query params or use today's date
+        selected_date = self.request.GET.get('date', timezone.now().date())
+
+        # Filter jobs by the selected date
+        queryset = Job.objects.filter(
+            Q(created_at__date=selected_date)
+        ).order_by('-created_at')
+
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         jobs = context['jobs']
         context['show_completion_time'] = any(job.status == "Completed" for job in jobs)
+        context['selected_date'] = self.request.GET.get('date', timezone.now().date())
         return context
 
 
