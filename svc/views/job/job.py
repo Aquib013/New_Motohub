@@ -62,21 +62,18 @@ class JobListView(ListView):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        # Get the date from the query params or use today's date
-        selected_date = self.request.GET.get('date', timezone.now().date())
-
-        # Filter jobs by the selected date
-        queryset = Job.objects.filter(
-            Q(created_at__date=selected_date)
-        ).order_by('-created_at')
-
-        return queryset
+        selected_date = self.request.GET.get('date')
+        if selected_date:
+            return Job.objects.filter(created_at__date=selected_date)
+        else:
+            # Default to today's jobs
+            return Job.objects.filter(created_at__date=timezone.now().date())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         jobs = context['jobs']
         context['show_completion_time'] = any(job.status == "Completed" for job in jobs)
-        context['selected_date'] = self.request.GET.get('date', timezone.now().date())
+        context['selected_date'] = self.request.GET.get('date', timezone.now().date().isoformat())
         return context
 
 
