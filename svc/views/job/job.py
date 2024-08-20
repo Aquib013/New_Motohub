@@ -64,10 +64,10 @@ class JobListView(ListView):
     def get_queryset(self):
         selected_date = self.request.GET.get('date')
         if selected_date:
-            return Job.objects.filter(created_at__date=selected_date)
+            return Job.objects.filter(created_at__date=selected_date).order_by('job_no')
         else:
             # Default to today's jobs
-            return Job.objects.filter(created_at__date=timezone.now().date())
+            return Job.objects.filter(created_at__date=timezone.now().date()).order_by('job_no')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
