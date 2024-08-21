@@ -65,7 +65,7 @@ class CustomerJobsView(DetailView):
         # Update dues and balance
         customer.update_dues_and_balance()
 
-        jobs = customer.job_set.filter(status='Completed')
+        jobs = customer.job_set.filter(status='Completed').order_by("-created_at")
         context.update({
             'jobs': jobs,
             'total_dues': customer.dues,

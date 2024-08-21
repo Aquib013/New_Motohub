@@ -16,6 +16,7 @@ MACHINING_CHOICES = (
     ("Valve Grinding", "Valve Grinding"),
     ("Crank Repairing", "Crank Repairing"),
     ("Head Seat Cutting", "Head Seat Cutting"),
+    ("Head Repairing", "Head Repairing"),
     ("Guide Fitting", "Guide Fitting"),
     ("Plug Socket Threading", "Plug Socket Threading"),
     ("Housing Fitting", "Housing Fitting"),
