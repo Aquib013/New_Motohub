@@ -81,11 +81,9 @@ class Expense(BaseModel):
                 employee.emp_advance = F('emp_advance') + extra_amount
                 employee.emp_dues = F('emp_dues') - min(employee.emp_dues, difference)
 
-            elif new_amount == emp_salary:
+            else :
                 employee.emp_advance = F('emp_advance') + difference
 
-            else:
-                employee.emp_dues = F('emp_dues') - difference
         else:  # Amount decreased
             if old_amount >= emp_salary:
                 reduced_advance = min(employee.emp_advance, abs(difference))
@@ -124,3 +122,44 @@ class Expense(BaseModel):
         vendor.vendor_balance = F('vendor_balance') - difference
         vendor.save(update_fields=['vendor_balance'])                # NOQA
         vendor.refresh_from_db(fields=['vendor_balance'])            # NOQA
+
+    def update_employee_on_deletion(self):
+        if self.expense_type == "Employee Payment":
+            employee = self.employee
+            emp_salary = employee.emp_salary
+            amount = self.amount
+
+            if amount > emp_salary:
+                extra_amount = amount - emp_salary
+                employee.emp_advance = F('emp_advance') - extra_amount
+            else:
+                due_amount = emp_salary - amount
+                employee.emp_dues = F('emp_dues') - due_amount
+
+            employee.save(update_fields=['emp_dues', 'emp_advance'])
+            employee.refresh_from_db(fields=['emp_dues', 'emp_advance'])
+
+            # Settle advance and dues if they are equal
+            if employee.emp_dues == employee.emp_advance:
+                employee.emp_dues = 0
+                employee.emp_advance = 0
+                employee.save(update_fields=['emp_dues', 'emp_advance'])
+
+            # Update last payment info
+            last_payment = Expense.objects.filter(
+                employee=employee,
+                expense_type="Employee Payment"
+            ).exclude(pk=self.pk).order_by('-created_at').first()
+
+            if last_payment:
+                employee.emp_last_payment = last_payment.amount
+                employee.emp_last_payment_date = last_payment.created_at
+            else:
+                employee.emp_last_payment = Decimal('0.00')
+                employee.emp_last_payment_date = None
+
+            employee.save(update_fields=['emp_last_payment', 'emp_last_payment_date'])
+
+    def delete(self, *args, **kwargs):
+        self.update_employee_on_deletion()
+        super().delete(*args, **kwargs)

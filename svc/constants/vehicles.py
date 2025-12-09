@@ -8,4 +8,5 @@ VEHICLE_CHOICES = (
     ("Royal Enfield", "Royal Enfield"),
     ("Mahindra", "Mahindra"),
     ("Universal", "Universal"),
+
 )

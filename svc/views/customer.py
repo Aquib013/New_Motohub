@@ -1,7 +1,5 @@
-from decimal import Decimal
 
 from django.contrib import messages
-from django.db.models import Sum, Case, When, F, DecimalField
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
@@ -23,7 +21,8 @@ class CustomerListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['customers'] = self.get_queryset()
+        context['mechanic_customers'] = Customer.objects.filter(customer_type='Mechanic')
+        context['non_mechanic_customers'] = Customer.objects.filter(customer_type='Non-Mechanic')
         return context
 
 
@@ -65,7 +64,7 @@ class CustomerJobsView(DetailView):
         # Update dues and balance
         customer.update_dues_and_balance()
 
-        jobs = customer.job_set.filter(status='Completed').order_by("-created_at")
+        jobs = customer.job_set.filter(status__in=['Completed', 'Pending']).order_by("-created_at")
         context.update({
             'jobs': jobs,
             'total_dues': customer.dues,

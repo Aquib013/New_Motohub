@@ -3,25 +3,17 @@
 {% block title %}MotoHub Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid min-vh-100 d-flex flex-column">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom">
         <h1 class="h2">Welcome, {{ user.first_name }} {{ user.last_name }}!</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
-            <div class="btn-group me-2">
-                <button onclick="setPeriod('daily')"
-                        class="btn btn-sm btn-outline-dark {% if period == 'daily' %}active{% endif %}">
-                    Daily
-                </button>
-                <button onclick="setPeriod('weekly')"
-                        class="btn btn-sm btn-outline-dark {% if period == 'weekly' %}active{% endif %}">
-                    Weekly
-                </button>
-                <button onclick="setPeriod('monthly')"
-                        class="btn btn-sm btn-outline-dark {% if period == 'monthly' %}active{% endif %}">
-                    Monthly
-                </button>
-            </div>
-            <input type="date" id="insight-date" onchange="setDate()" class="btn btn-sm btn-outline-dark" value="{{ selected_date|date:'Y-m-d' }}">
+            <form class="d-flex align-items-center" onsubmit="return setDateRange()">
+                <label for="start-date" class="me-2">From:</label>
+                <input type="date" id="start-date" name="start-date" class="form-control form-control-sm me-2" value="{{ start_date|date:'Y-m-d' }}">
+                <label for="end-date" class="me-2">To:</label>
+                <input type="date" id="end-date" name="end-date" class="form-control form-control-sm me-2" value="{{ end_date|date:'Y-m-d' }}">
+                <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+            </form>
         </div>
     </div>
 
@@ -58,76 +50,93 @@
     </div>
     {% endif %}
 
+    <!-- Insights Header -->
     <div class="row">
-        <h2 class="mb-4">Insights from {{ start_date|date:"F j, Y" }} to {{ end_date|date:"F j, Y" }}</h2>
-        <!-- Cards displaying insights -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card bg-success text-white">
-                    <div class="card-body">
-                        <h2 class="card-title text-center"><strong>Total Income: ₹ {{ total_income }}</strong></h2>
-                    </div>
+        <div class="col-12">
+            <h2 class="mb-4">
+                Insights for
+                {% if start_date == end_date %}
+                    {{ start_date|date:"F j, Y" }}
+                {% else %}
+                    {{ start_date|date:"F j, Y" }} to {{ end_date|date:"F j, Y" }}
+                {% endif %}
+            </h2>
+        </div>
+    </div>
+
+    <!-- Total Income Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-0">
+                        <strong>Total Income: ₹ {{ total_income }}</strong>
+                    </h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-info mb-4">
+    </div>
+
+    <!-- Responsive Insight Cards -->
+    <div class="row">
+        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+            <div class="card border-info shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title"><strong>Total Revenue By Service</strong></h5>
                     <p class="card-text text-primary">₹ {{ total_service_revenue }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-info mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+            <div class="card border-info shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title"><strong>Revenue By Lathe</strong></h5>
                     <p class="card-text text-primary">₹ {{ machining_revenue }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-info mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+            <div class="card border-info shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title"><strong>Revenue By Workshop</strong></h5>
                     <p class="card-text text-primary">₹ {{ workshop_revenue }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-info mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+            <div class="card border-info shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title"><strong>Amount of Item Sold</strong></h5>
                     <p class="card-text text-primary">₹ {{ total_item_revenue }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-info mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+            <div class="card border-info shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title"><strong>Profit By Item</strong></h5>
                     <p class="card-text text-primary">₹ {{ total_profit_by_item }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-info mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+            <div class="card border-info shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title"><strong>Amount of Item Purchased</strong></h5>
                     <p class="card-text text-primary">₹ {{ item_purchased }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-info mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+            <div class="card border-info shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title"><strong>Total Revenue</strong></h5>
                     <p class="card-text text-primary">₹ {{ total_revenue }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-info mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+            <div class="card border-info shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title"><strong>Total Expense</strong></h5>
                     <p class="card-text text-primary">₹ {{ total_expense }}</p>
@@ -137,20 +146,15 @@
     </div>
 </div>
 
-
 <script>
-    function setPeriod(period) {
+    function setDateRange() {
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
         const url = new URL(window.location.href);
-        url.searchParams.set('period', period);
-        url.searchParams.delete('date');  // Clear the date when changing period
+        url.searchParams.set('start_date', startDate);
+        url.searchParams.set('end_date', endDate);
         window.location.href = url.href;
-    }
-
-    function setDate() {
-        const date = document.getElementById('insight-date').value;
-        const url = new URL(window.location.href);
-        url.searchParams.set('date', date);
-        window.location.href = url.href;
+        return false;  // Prevent form submission
     }
 </script>
 {% endblock %}

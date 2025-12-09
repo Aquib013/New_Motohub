@@ -1,13 +1,14 @@
+import json
 from decimal import Decimal
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, OuterRef, Subquery
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import (
     CreateView,
     ListView,
@@ -19,7 +20,7 @@ from django.views.generic import (
 from django.urls import reverse_lazy, reverse
 from weasyprint import HTML
 
-from svc.models import Job, Service, Customer
+from svc.models import Job, Service, Customer, Vehicle
 from svc.forms import JobForm
 from svc.models.customer import CUSTOMER_CHOICE
 
@@ -48,11 +49,63 @@ class JobCreateView(CreateView):
         return super().form_invalid(form)
 
 
-def get_customers(request):
-    customer_type = request.GET.get('type')
-    customers = Customer.objects.filter(customer_type=customer_type).values('id', 'customer_name', 'place')
-    customer_list = [{'id': c['id'], 'name': f"{c['customer_name']} - {c['place']}"} for c in customers]
+def search_customers(request):
+    query = request.GET.get('query', '')
+    customer_type = request.GET.get('type', '')
+
+    customers = Customer.objects.filter(
+        Q(customer_name__icontains=query) | Q(customer_mob_no__icontains=query)
+    )
+
+    if customer_type:
+        customers = customers.filter(customer_type=customer_type)
+
+    customer_list = [
+        {'id': c.id, 'name': c.customer_name, 'mobile': c.customer_mob_no, 'customer_type': c.customer_type} for c in
+        customers]
+
+    if not customer_list:
+        customer_list.append({
+            'id': 'new',
+            'name': f"Create new customer: {query}",
+            'mobile': query if query.isdigit() and len(query) == 10 else '',
+            'customer_type': customer_type
+        })
+
     return JsonResponse(list(customer_list), safe=False)
+
+
+def get_customer_details(request):
+    customer_id = request.GET.get('id')
+    try:
+        customer = Customer.objects.get(id=customer_id)
+        return JsonResponse({
+            'name': customer.customer_name,
+            'mobile': customer.customer_mob_no
+        })
+    except Customer.DoesNotExist:  # NOQA
+        return JsonResponse({'error': 'Customer not found'}, status=404)
+
+
+@csrf_exempt
+def create_customer(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            customer = Customer.objects.create(
+                customer_name=data['customer_name'],
+                customer_mob_no=data['customer_mob_no'],
+                customer_type=data['customer_type']
+            )
+            return JsonResponse({
+                'id': customer.id,
+                'name': customer.customer_name,
+                'mobile': customer.customer_mob_no,
+                'customer_type': customer.customer_type
+            })
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 class JobListView(ListView):
@@ -64,10 +117,18 @@ class JobListView(ListView):
     def get_queryset(self):
         selected_date = self.request.GET.get('date')
         if selected_date:
-            return Job.objects.filter(created_at__date=selected_date).order_by('job_no')
+            queryset = Job.objects.filter(created_at__date=selected_date)
         else:
             # Default to today's jobs
-            return Job.objects.filter(created_at__date=timezone.now().date()).order_by('job_no')
+            queryset = Job.objects.filter(created_at__date=timezone.now().date())
+
+        # Subquery to get the first vehicle for each job
+        # vehicle_subquery = Service.objects.filter(job=OuterRef('pk')).order_by('id').values('vehicle__name')[:1]
+        #
+        # # Annotate the queryset with the vehicle name
+        # queryset = queryset.annotate(vehicle_name=Subquery(vehicle_subquery))
+
+        return queryset.order_by('job_no')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -126,7 +187,7 @@ class JobDeleteView(DeleteView):
     success_url = reverse_lazy('jobs')  # Replace with your job list URL name
 
     def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
+        self.object = self.get_object()  # NOQA
         try:
             self.object.delete()
             messages.success(request, "Job deleted successfully.")

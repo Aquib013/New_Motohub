@@ -36,6 +36,7 @@
                   <tr>
                     <th>Job No</th>
                     <th>Job Date</th>
+                    <th class="text-right">Vehicle</th>
                     <th class="text-right">Job Amount</th>
                     <th class="text-right">Paid Amount</th>
                     <th class="text-right">Due/Balance</th>
@@ -47,6 +48,7 @@
                     <tr>
                       <td>{{ job.job_no }}</td>
                       <td>{{ job.created_at|date:"d M Y" }}</td>
+                      <td>{{ job.vehicle.name }}</td>
                       <td class="text-right">₹{{ job.job_amount|floatformat:2 }}</td>
                       <td class="text-right">₹{{ job.paid_amount|floatformat:2 }}</td>
                       <td class="text-right">

@@ -7,7 +7,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
-from svc.models import BaseModel, Customer
+from svc.models import BaseModel, Customer, Vehicle
 
 JOB_STATUS = (
     ("Pending", "Pending"),
@@ -18,6 +18,7 @@ JOB_STATUS = (
 class Job(BaseModel):
     job_no = models.CharField(unique=True)
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True)
     status = models.CharField(choices=JOB_STATUS, null=True, blank=True, default="Pending")
     license_plate = models.CharField(null=True, blank=True)
     total_run = models.PositiveIntegerField(null=True, blank=True)
@@ -69,7 +70,7 @@ class Job(BaseModel):
 
 @receiver(post_save, sender=Job)
 def update_customer_on_job_creation(sender, instance, created, **kwargs):
-    if instance.status == 'Completed':
+    if instance.status == 'Completed' and instance.customer is not None:
         customer = instance.customer
         customer.last_billed_amount = instance.job_amount
         customer.last_billed_date = instance.created_at
@@ -78,11 +79,14 @@ def update_customer_on_job_creation(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Job)
 def update_customer_on_job_deletion(sender, instance, **kwargs):
+    if instance.customer is None:
+        return  # Exit the function if there's no customer associated with the job
+
     customer = instance.customer
     previous_job = Job.objects.filter(
-            customer=customer,
-            status="Completed"
-        ).exclude(id=instance.id).order_by('-job_completion_time', '-created_at').first()
+        customer=customer,
+        status="Completed"
+    ).exclude(id=instance.id).order_by('-job_completion_time', '-created_at').first()
 
     if previous_job:
         customer.last_billed_amount = previous_job.job_amount

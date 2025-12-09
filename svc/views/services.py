@@ -87,9 +87,9 @@ class ServiceUpdateView(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['job'] = self.object.job
-        context['machining_choices'] = json.dumps(MACHINING_CHOICES)
-        context['workshop_choices'] = json.dumps(WORKSHOP_CHOICES)
+        context['job'] = self.object.job  # Get the job from the service being edited
+        context['machining_choices'] = json.dumps(list(MACHINING_CHOICES))
+        context['workshop_choices'] = json.dumps(list(WORKSHOP_CHOICES))
         return context
 
 

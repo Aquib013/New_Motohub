@@ -27,8 +27,8 @@
                             <tr>
                                 <th>Job No.</th>
                                 <th>Customer</th>
+                                <th>Vehicle</th>
                                 <th>Reg. No.</th>
-                                <th>Job Date</th>
                                 <th>Status</th>
         <!--                        {% if show_completion_time %}-->
         <!--                            <th>Completed</th>-->
@@ -43,8 +43,8 @@
                                 <tr>
                                     <td>{{ job.job_no }}</td>
                                     <td>{{ job.customer.customer_name}}</td>
+                                    <td>{{ job.vehicle.name|default:"N/A" }}</td>
                                     <td>{{ job.license_plate }}</td>
-                                    <td>{{ job.created_at.date }}</td>
                                     <td><span class="badge bg-{{ job.status|lower }}">{{ job.status }}</span></td>
         <!--                            {% if show_completion_time %}-->
         <!--                                <td>{{ job.job_completion_time }}</td>-->

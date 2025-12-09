@@ -3,7 +3,6 @@ from django.db.models import Sum, Case, When, F, DecimalField
 from decimal import Decimal
 
 from svc.models import BaseModel
-from svc.constants.places import PLACE_CHOICES
 
 CUSTOMER_CHOICE = [
     ("Mechanic", "Mechanic"),
@@ -13,16 +12,15 @@ CUSTOMER_CHOICE = [
 
 class Customer(BaseModel):
     customer_name = models.CharField()
-    customer_mob_no = models.CharField(unique=True)
+    customer_mob_no = models.CharField(max_length=10, unique=True)
     customer_type = models.CharField(choices=CUSTOMER_CHOICE)
-    place = models.CharField(choices=PLACE_CHOICES)
     dues = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    balance = models.FloatField(default=0)
+    balance = models.FloatField(default=0, null=True, blank=True)
     last_billed_date = models.DateTimeField(null=True, blank=True)
     last_billed_amount = models.DecimalField(null=True, blank=True, max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"{self.customer_name} - {self.place}"
+        return f"{self.customer_name}"
 
     def update_dues_and_balance(self):
         jobs = self.job_set.filter(status='Completed')  # NOQA

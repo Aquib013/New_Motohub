@@ -11,25 +11,27 @@ class DashboardView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = timezone.now().date()
-        period = self.request.GET.get('period', 'daily')
-        selected_date = self.request.GET.get('date')
 
-        if selected_date:
-            selected_date = timezone.datetime.strptime(selected_date, "%Y-%m-%d").date()
+        start_date = self.request.GET.get('start_date')
+        end_date = self.request.GET.get('end_date')
+
+        if start_date and end_date:
+            start_date = timezone.datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_date = timezone.datetime.strptime(end_date, "%Y-%m-%d").date()
         else:
-            # Default to current date if no date is selected
-            selected_date = today
+            # Default to today's date if no date range is selected
+            start_date = end_date = today
 
         # Get insights
-        insights = get_insights(selected_date, period)
+        insights = get_insights(start_date, end_date)
 
         low_stock_items = Item.objects.filter(item_quantity_in_stock__lt=1)
 
         # Update context with insights
         context.update(insights)
         context['low_stock_items'] = low_stock_items
-        context['today'] = timezone.now().date()
-        context['selected_date'] = selected_date
-        context['period'] = period
+        context['today'] = today
+        context['start_date'] = start_date
+        context['end_date'] = end_date
 
         return context

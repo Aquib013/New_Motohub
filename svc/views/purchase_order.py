@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.utils import timezone
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from svc.models import PurchaseOrder
 from svc.forms import PurchaseOrderForm
 
@@ -30,13 +30,14 @@ class PurchaseOrderCreateView(CreateView):
     model = PurchaseOrder
     form_class = PurchaseOrderForm
     template_name = 'purchase_order/purchase_order_form.html'
-    success_url = reverse_lazy('purchase-orders')
 
     def form_valid(self, form):
-        purchase_order = form.save(commit=False)
-        purchase_order.save()
+        self.object = form.save()
         messages.success(self.request, "Purchase Order created successfully.")
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('purchase-order-detail', kwargs={'pk': self.object.pk})
 
 
 class PurchaseOrderDetailView(DetailView):

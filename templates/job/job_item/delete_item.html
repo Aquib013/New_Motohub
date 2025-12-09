@@ -1,12 +1,67 @@
 {% extends "base.html" %}
-{% block title %}Delete Item {% endblock %}
+{% block title %}Delete Item{% endblock %}
 
 {% block content %}
-  <h2>Delete Item </h2>
-  <p>Are you sure you want to delete the item "{{ object.item.item }}" from the job?</p>
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit" >Delete</button>
-    <a href="{% url 'job_detail' job.pk %}" >Cancel</a>
-  </form>
+<style>
+  .modal {
+    display: block;
+    position: fixed;
+    z-index: 1000;
+    padding-top: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+  }
+
+  .modal-content {
+    background-color: #fff;
+    margin: auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+
+  .modal-buttons {
+    margin-top: 20px;
+  }
+
+  .modal-buttons button,
+  .modal-buttons a {
+    margin: 0 10px;
+    padding: 8px 16px;
+    border: none;
+    text-decoration: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .modal-buttons button {
+    background-color: #d9534f;
+    color: white;
+  }
+
+  .modal-buttons a {
+    background-color: #5bc0de;
+    color: white;
+  }
+</style>
+
+<div class="modal">
+  <div class="modal-content">
+    <h2>Confirm Deletion</h2>
+    <p>Are you sure you want to delete the item "<strong>{{ object.item.item }}</strong>" from the job?</p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="modal-buttons">
+        <button type="submit">Delete</button>
+        <a href="{% url 'job_detail' job.pk %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}

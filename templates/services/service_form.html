@@ -4,10 +4,6 @@
 
 {% block title %}{% if form.instance.pk %}Edit Service{% else %}Add Service{% endif %}{% endblock %}
 
-{% block extra_css %}
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-{% endblock %}
-
 {% block content %}
 <div class="container mt-4">
   <div class="row justify-content-center">
@@ -19,7 +15,7 @@
           <form method="post">
             {% csrf_token %}
             {% for field in form %}
-              {% if field.name != 'job_hidden' %}
+              {% if field.name != 'job_hidden' and field.name != 'custom_description' %}
                 <div class="mb-3">
                   {{ field.label_tag }}
                   {% if field.name == 'job' %}
@@ -34,6 +30,21 @@
                     <div class="invalid-feedback d-block">{{ error }}</div>
                   {% endfor %}
                 </div>
+              {% elif field.name == 'custom_description' %}
+                <div class="mb-3 custom-description-field" style="display: none;">
+                  <label for="id_custom_description">Custom Service Description</label>
+                  <input type="text"
+                         name="custom_description"
+                         id="id_custom_description"
+                         class="form-control"
+                         placeholder="Please describe the service"
+                         {% if form.instance.custom_description %}
+                         value="{{ form.instance.custom_description }}"
+                         {% endif %}>
+                  {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                  {% endfor %}
+                </div>
               {% else %}
                 {{ field }}
               {% endif %}
@@ -42,7 +53,11 @@
               <button type="submit" class="btn btn-primary">
                 {% if form.instance.pk %}Update{% else %}Create{% endif %}
               </button>
-              <a href="{% url 'job_detail' job.pk %}" class="btn btn-secondary">Cancel</a>
+              {% if form.instance.pk %}
+                <a href="{% url 'job_detail' form.instance.job.pk %}" class="btn btn-secondary">Cancel</a>
+              {% else %}
+                <a href="{% url 'job_detail' job.pk %}" class="btn btn-secondary">Cancel</a>
+              {% endif %}
             </div>
           </form>
         </div>
@@ -55,14 +70,17 @@
 document.addEventListener('DOMContentLoaded', function() {
     var serviceTypeSelect = document.getElementById('id_service_type');
     var descriptionSelect = document.getElementById('id_description');
+    var customDescriptionField = document.querySelector('.custom-description-field');
+    var customDescriptionInput = document.getElementById('id_custom_description');
 
     var machiningChoices = JSON.parse('{{ machining_choices|safe }}');
     var workshopChoices = JSON.parse('{{ workshop_choices|safe }}');
     var initialDescription = '{{ form.instance.description|default_if_none:"" }}';
+    var initialCustomDescription = '{{ form.instance.custom_description|default_if_none:"" }}';
 
     function updateDescriptionChoices() {
         var selectedType = serviceTypeSelect.value;
-        descriptionSelect.innerHTML = '<option value="">---------</option>';  // Add a default empty option
+        descriptionSelect.innerHTML = '<option value="">---------</option>';
 
         if (selectedType) {
             var choices = selectedType === 'Machining' ? machiningChoices : workshopChoices;
@@ -71,26 +89,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 descriptionSelect.add(option);
             });
         }
+
         if (initialDescription) {
             descriptionSelect.value = initialDescription;
+            if (initialDescription === 'Others') {
+                customDescriptionField.style.display = 'block';
+                customDescriptionInput.value = initialCustomDescription;
+            }
+        }
+    }
+
+    function toggleCustomDescription() {
+        if (descriptionSelect.value === 'Others') {
+            customDescriptionField.style.display = 'block';
+            customDescriptionInput.required = true;
+            customDescriptionInput.focus();
+        } else {
+            customDescriptionField.style.display = 'none';
+            customDescriptionInput.required = false;
+            customDescriptionInput.value = '';
         }
     }
 
     serviceTypeSelect.addEventListener('change', updateDescriptionChoices);
-    updateDescriptionChoices();  // Initial call to set correct choices
+    descriptionSelect.addEventListener('change', toggleCustomDescription);
+
+    // Initial setup
+    updateDescriptionChoices();
+    toggleCustomDescription();
 });
 </script>
 
-{% endblock %}
-{% block extra_js %}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#id_vehicle').select2({
-                placeholder: 'Select a vehicle type',
-                allowClear: true
-            });
-        });
-    </script>
 {% endblock %}

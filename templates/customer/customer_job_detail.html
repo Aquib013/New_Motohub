@@ -21,13 +21,7 @@
               <p><strong>Job Amount:</strong> ₹{{ job.job_amount|floatformat:2 }}</p>
             </div>
             <div class="col-md-6">
-              {% with unique_vehicles=services|unique_vehicles %}
-              {% if unique_vehicles|length == 1 %}
-                <p><strong>Vehicle:</strong> {{ unique_vehicles.0.make }} {{ unique_vehicles.0.name }}</p>
-              {% else %}
-                <p><strong>Vehicle:</strong> Multiple Vehicles</p>
-              {% endif %}
-              {% endwith %}
+              <p><strong>Vehicle:</strong> {{ job.vehicle.name }}</p>
               <p><strong>Registration No.:</strong> {{ job.license_plate }}</p>
               <p><strong>Mileage:</strong> {{ job.total_run }} Kms</p>
             </div>

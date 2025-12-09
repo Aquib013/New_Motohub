@@ -66,6 +66,7 @@ class ItemCreateView(CreateView):
         return super().form_invalid(form)
 
 
+
 class ItemDetailView(DetailView):
     model = Item
     template_name = 'items/item_detail.html'
@@ -82,3 +83,5 @@ class ItemDeleteView(DeleteView):
     model = Item
     template_name = 'items/item_confirm_delete.html'
     success_url = reverse_lazy('item-list')
+
+

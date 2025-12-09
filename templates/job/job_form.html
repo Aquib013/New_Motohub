@@ -5,6 +5,10 @@
     {% if form.instance.pk %}Update Job{% else %}Create Job{% endif %}
 {% endblock %}
 
+{% block extra_css %}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
+
 {% block content %}
 <div class="container mt-5">
 <div class="row justify-content-center">
@@ -26,10 +30,22 @@
                                         <small class="form-text text-danger">{{ field.errors.0 }}</small>
                                     {% endif %}
                                 </div>
+                            {% elif field.name == 'customer' %}
+                                <div class="col-md-6 mb-3">
+                                    {{ form.customer.label_tag }}
+                                    <div class="customer-search-container">
+                                        <input type="text" id="customer_search" name="customer_search" class="form-control" placeholder="Search customer by name or mobile">
+                                        <div id="customer-search-results"></div>
+                                    </div>
+                                    {{ form.customer.as_hidden }}
+                                    {% if form.customer.errors %}
+                                        <small class="form-text text-danger">{{ form.customer.errors.0 }}</small>
+                                    {% endif %}
+                                </div>
                             {% else %}
                                 <div class="col-md-6 mb-3">
                                     {{ field.label_tag }}
-                                    {% if field.name == 'status' or field.name == 'customer' %}
+                                    {% if field.name == 'status' or field.name == 'customer_type' %}
                                         {% render_field field class="form-select" %}
                                     {% else %}
                                         {% render_field field class="form-control" %}
@@ -54,13 +70,43 @@
         </div>
     </div>
 </div>
-
+<style>
+    .customer-search-container {
+        position: relative;
+    }
+    #customer_search {
+        width: 100%;
+    }
+    #customer-search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ced4da;
+        border-top: none;
+        border-radius: 0 0 0.25rem 0.25rem;
+        background-color: white;
+        z-index: 1000;
+        display: none;
+    }
+    .customer-result {
+        padding: 0.5rem;
+        cursor: pointer;
+    }
+    .customer-result:hover {
+        background-color: #f8f9fa;
+    }
+</style>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const statusField = document.getElementById('id_status');
     const paymentContainer = document.getElementById('payment-container');
     const customerTypeSelect = document.getElementById('id_customer_type');
-    const customerSelect = document.getElementById('id_customer');
+    const customerSearchInput = document.getElementById('customer_search');
+    const customerSearchResults = document.getElementById('customer-search-results');
+    const customerHiddenInput = document.getElementById('id_customer');
 
     function togglePaymentField() {
         paymentContainer.style.display = statusField.value === 'Completed' ? 'block' : 'none';
@@ -69,36 +115,121 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function updateCustomerOptions() {
+    function searchCustomers() {
+        const query = customerSearchInput.value;
         const customerType = customerTypeSelect.value;
 
-        if (customerType) {
-            fetch(`{% url 'get-customers' %}?type=${customerType}`)
+        if (query.length > 2) {
+            fetch(`{% url 'search_customers' %}?query=${query}&type=${customerType}`)
                 .then(response => response.json())
                 .then(data => {
-                    const currentCustomer = customerSelect.value;
-                    customerSelect.innerHTML = '<option value="">Select a customer</option>';
-                    data.forEach(customer => {
-                        const option = new Option(customer.name, customer.id);
-                        option.selected = customer.id == currentCustomer;
-                        customerSelect.add(option);
-                    });
-                    customerSelect.disabled = false;
+                    customerSearchResults.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(customer => {
+                            const div = document.createElement('div');
+                            div.className = 'customer-result';
+                            div.textContent = `${customer.name} (${customer.mobile})`;
+                            div.dataset.id = customer.id;
+                            div.addEventListener('click', () => {
+                                if (customer.id === 'new') {
+                                    createNewCustomer(customer.name, customer.mobile);
+                                } else {
+                                    selectCustomer(customer);
+                                }
+                            });
+                            customerSearchResults.appendChild(div);
+                        });
+                        customerSearchResults.style.display = 'block';
+                    } else {
+                        customerSearchResults.style.display = 'none';
+                    }
                 });
         } else {
-            customerSelect.innerHTML = '<option value="">Select a customer</option>';
-            customerSelect.disabled = true;
+            customerSearchResults.style.display = 'none';
         }
     }
 
-    customerTypeSelect.addEventListener('change', updateCustomerOptions);
+    function createNewCustomer(name, mobile) {
+        const customerName = name.replace('Create new customer: ', '');
+        const customerMobile = mobile || prompt('Enter customer mobile number:');
+        const customerType = customerTypeSelect.value;
+
+        if (customerName && customerMobile && customerType) {
+            fetch('{% url "create_customer" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    customer_name: customerName,
+                    customer_mob_no: customerMobile,
+                    customer_type: customerType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.id) {
+                    selectCustomer(data);
+                    alert('New customer created successfully!');
+                } else {
+                    alert('Failed to create new customer. Please try again.');
+                }
+            });
+        } else {
+            alert('Customer name, mobile number, and type are required to create a new customer.');
+        }
+    }
+
+    function selectCustomer(customer) {
+        customerSearchInput.value = `${customer.name} (${customer.mobile})`;
+        customerHiddenInput.value = customer.id;
+        customerSearchResults.style.display = 'none';
+        if (customer.customer_type) {
+            customerTypeSelect.value = customer.customer_type;
+        }
+        updateVehicleOptions(customer.id);
+    }
+
+    customerTypeSelect.addEventListener('change', () => {
+        customerSearchInput.value = '';
+        customerHiddenInput.value = '';
+        customerSearchResults.style.display = 'none';
+    });
+
+    customerSearchInput.addEventListener('input', searchCustomers);
     statusField.addEventListener('change', togglePaymentField);
 
+    // Hide search results when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!customerSearchInput.contains(event.target) && !customerSearchResults.contains(event.target)) {
+            customerSearchResults.style.display = 'none';
+        }
+    });
+
     // Initial setup
-    if (customerTypeSelect.value) {
-        updateCustomerOptions();
-    }
     togglePaymentField();
+
+    // Set initial value for customer search if editing an existing job
+    if (customerHiddenInput.value) {
+        fetch(`{% url 'get_customer_details' %}?id=${customerHiddenInput.value}`)
+            .then(response => response.json())
+            .then(customer => {
+                customerSearchInput.value = `${customer.name} (${customer.mobile})`;
+            });
+    }
 });
 </script>
+{% endblock %}
+{% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#id_vehicle').select2({
+                placeholder: 'Select a vehicle',
+                allowClear: true
+            });
+        });
+    </script>
 {% endblock %}

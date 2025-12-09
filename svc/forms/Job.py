@@ -1,18 +1,25 @@
-from django import forms
 from django_select2 import forms as s2forms
 
-from svc.models import Job, JobItem, Customer, Item
+from svc.models import JobItem, Item, Vehicle
 from svc.models.customer import CUSTOMER_CHOICE
+
+from django import forms
+from svc.models import Job, Customer
 
 
 class JobForm(forms.ModelForm):
     customer_type = forms.ChoiceField(choices=[('', 'Select customer type')] + CUSTOMER_CHOICE,
                                       required=False, label="Customer Type")
+    vehicle = forms.ModelChoiceField(
+        queryset=Vehicle.objects.all(),
+        widget=s2forms.Select2Widget
+    )
     add_payment = forms.DecimalField(max_digits=10, decimal_places=2, required=False, label="Add Payment")
+    customer = forms.ModelChoiceField(queryset=Customer.objects.all(), required=False, widget=forms.HiddenInput())
 
     class Meta:
         model = Job
-        fields = ["customer_type", "customer", "license_plate", "total_run", "status"]
+        fields = ["customer_type", "customer", "vehicle", "license_plate", "total_run", "status"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -55,6 +62,7 @@ class JobForm(forms.ModelForm):
         add_payment = cleaned_data.get('add_payment')
         customer_type = cleaned_data.get('customer_type')
         customer = cleaned_data.get('customer')
+
         if status == 'Completed' and add_payment is None:
             raise forms.ValidationError({
                 'add_payment': 'This field is required when the job status is completed.'
