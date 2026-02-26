@@ -32,7 +32,7 @@
             <!--            <td>{{ vendor.vendor_name }}</td>-->
                         <td>{{ vendor.vendor_contact_no }}</td>
                         <td>{{ vendor.vendor_balance }}</td>
-                        <td>{{ vendor.last_purchase_date.date }}</td>
+                        <td>{{ vendor.last_purchase_date|date:"d M Y" }}</td>
                         <td>{{ vendor.last_payment_amount }}</td>
                         <td>{{ vendor.last_payment_date.date }}</td>
                         <td>

@@ -6,6 +6,61 @@
 
 {% block extra_css %}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .item-info-bar {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .item-info-bar .info-item {
+            display: inline-block;
+            margin-right: 24px;
+        }
+        .item-info-bar .info-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+        }
+        .item-info-bar .info-value {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #fcd34d;
+        }
+        .price-mode-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .price-mode-tabs .mode-btn {
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: transparent;
+            color: #aaa;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .price-mode-tabs .mode-btn.active {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #fcd34d;
+        }
+        .select2-container { width: 100% !important; }
+        .custom-badge {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -14,26 +69,138 @@
     <div class="col-md-8">
       <div class="card">
         <div class="card-header bg-primary text-white">
-          <h2 class="mb-0">{% if form.instance.pk %}Edit Item of{% else %}Add Item to {% endif %} job {{ job.job_no }}</h2>
+          <h2 class="mb-0">{% if form.instance.pk %}Edit Item of{% else %}Add Item to{% endif %} Job {{ job.job_no }}</h2>
         </div>
         <div class="card-body">
           <form method="post">
             {% csrf_token %}
 
-            {% for field in form.visible_fields %}
+            <!-- Miscellaneous toggle -->
+            <div class="form-group row mb-3">
+              <div class="col-sm-9 offset-sm-3">
+                <div class="form-check">
+                  {{ form.is_custom }}
+                  <label class="form-check-label" for="{{ form.is_custom.id_for_label }}">
+                    {{ form.is_custom.label }} <span class="custom-badge">No stock deduction</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Existing item fields -->
+            <div id="existing-item-fields">
+              <!-- Item select -->
               <div class="form-group row mb-3">
-                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">{{ field.label }}</label>
+                <label for="{{ form.item.id_for_label }}" class="col-sm-3 col-form-label">Item</label>
                 <div class="col-sm-9">
-                  {{ field|add_class:"form-control" }}
-                  {% if field.errors %}
-                    <small class="text-danger">{{ field.errors|striptags }}</small>
+                  {{ form.item|add_class:"form-control" }}
+                  {% if form.item.errors %}
+                    <small class="text-danger">{{ form.item.errors|striptags }}</small>
                   {% endif %}
                 </div>
               </div>
-            {% endfor %}
+
+              <!-- Item info bar -->
+              <div class="form-group row mb-3">
+                <div class="col-sm-9 offset-sm-3">
+                  <div class="item-info-bar" id="item-info-bar">
+                    <div class="info-item">
+                      <div class="info-label">MRP</div>
+                      <div class="info-value">₹<span id="display-mrp">0</span></div>
+                    </div>
+                    <div class="info-item">
+                      <div class="info-label">Cost Price</div>
+                      <div class="info-value">₹<span id="display-cost">0</span></div>
+                    </div>
+                    <div class="info-item">
+                      <div class="info-label">Stock</div>
+                      <div class="info-value"><span id="display-stock">0</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom item name (shown when miscellaneous) -->
+            <div id="custom-item-fields" style="display: none;">
+              <div class="form-group row mb-3">
+                <label for="{{ form.custom_item_name.id_for_label }}" class="col-sm-3 col-form-label">Item Name</label>
+                <div class="col-sm-9">
+                  {{ form.custom_item_name|add_class:"form-control" }}
+                  {% if form.custom_item_name.errors %}
+                    <small class="text-danger">{{ form.custom_item_name.errors|striptags }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Quantity -->
+            <div class="form-group row mb-3">
+              <label for="{{ form.item_quantity.id_for_label }}" class="col-sm-3 col-form-label">Quantity</label>
+              <div class="col-sm-9">
+                {{ form.item_quantity|add_class:"form-control" }}
+                {% if form.item_quantity.errors %}
+                  <small class="text-danger">{{ form.item_quantity.errors|striptags }}</small>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Price mode toggle (only for existing items) -->
+            <div id="price-mode-section">
+              <div class="form-group row mb-2">
+                <div class="col-sm-9 offset-sm-3">
+                  <div class="price-mode-tabs">
+                    <button type="button" class="mode-btn active" id="btn-manual-mode" onclick="setPriceMode('manual')">Enter Price Manually</button>
+                    <button type="button" class="mode-btn" id="btn-discount-mode" onclick="setPriceMode('discount')">By Discount %</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Discount percentage -->
+              <div class="form-group row mb-3" id="discount-field">
+                <label for="{{ form.discount_percentage.id_for_label }}" class="col-sm-3 col-form-label">Discount %</label>
+                <div class="col-sm-9">
+                  {{ form.discount_percentage|add_class:"form-control" }}
+                  {% if form.discount_percentage.errors %}
+                    <small class="text-danger">{{ form.discount_percentage.errors|striptags }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Unit Price -->
+            <div class="form-group row mb-3" id="unit-price-field">
+              <label for="{{ form.item_unit_price.id_for_label }}" class="col-sm-3 col-form-label">Unit Price</label>
+              <div class="col-sm-9">
+                {{ form.item_unit_price|add_class:"form-control" }}
+                {% if form.item_unit_price.errors %}
+                  <small class="text-danger">{{ form.item_unit_price.errors|striptags }}</small>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Job (hidden/disabled) -->
+            {% if form.job %}
+            <div class="form-group row mb-3">
+              <label class="col-sm-3 col-form-label">Job</label>
+              <div class="col-sm-9">
+                {{ form.job|add_class:"form-control" }}
+              </div>
+            </div>
+            {% endif %}
+
             {% for hidden in form.hidden_fields %}
               {{ hidden }}
             {% endfor %}
+
+            {% if form.non_field_errors %}
+              <div class="form-group row mb-3">
+                <div class="col-sm-9 offset-sm-3">
+                  <small class="text-danger">{{ form.non_field_errors|striptags }}</small>
+                </div>
+              </div>
+            {% endif %}
+
             <div class="form-group row">
               <div class="col-sm-9 offset-sm-3">
                 <button type="submit" class="btn btn-primary">{% if form.instance.pk %}Update{% else %}Add{% endif %}</button>
@@ -52,11 +219,93 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        let currentMRP = 0;
+
         $(document).ready(function() {
             $('#id_item').select2({
                 placeholder: 'Select an item',
                 allowClear: true
             });
+
+            setPriceMode('manual');
+
+            // Check initial state (for form reload with errors)
+            if ($('#id_is_custom').is(':checked')) {
+                toggleCustomItem($('#id_is_custom')[0]);
+            }
+
+            // When item is selected, fetch its details
+            $('#id_item').on('change', function() {
+                const itemId = $(this).val();
+                if (itemId) {
+                    fetch(`{% url 'get_item_details' %}?id=${itemId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.error) {
+                                currentMRP = parseFloat(data.item_MRP);
+                                $('#display-mrp').text(data.item_MRP);
+                                $('#display-cost').text(data.cost_price);
+                                $('#display-stock').text(data.stock || '-');
+                                $('#item-info-bar').slideDown(200);
+                                $('#id_discount_percentage').val('');
+                                $('#id_item_unit_price').val('');
+                            }
+                        });
+                } else {
+                    $('#item-info-bar').slideUp(200);
+                    currentMRP = 0;
+                }
+            });
+
+            // Auto-calculate unit price when discount changes
+            $('#id_discount_percentage').on('input', function() {
+                const discount = parseFloat($(this).val());
+                if (!isNaN(discount) && currentMRP > 0) {
+                    const rawPrice = currentMRP - (currentMRP * discount / 100);
+                    const unitPrice = Math.ceil(rawPrice / 10) * 10;
+                    $('#id_item_unit_price').val(unitPrice);
+                } else {
+                    $('#id_item_unit_price').val('');
+                }
+            });
         });
+
+        function toggleCustomItem(checkbox) {
+            if (checkbox.checked) {
+                $('#existing-item-fields').slideUp(200);
+                $('#custom-item-fields').slideDown(200);
+                $('#price-mode-section').slideUp(200);
+                $('#id_item_unit_price').prop('readonly', false);
+                $('#id_item_unit_price').val('');
+                $('#id_discount_percentage').val('');
+                $('#id_item').val(null).trigger('change');
+                $('#item-info-bar').hide();
+            } else {
+                $('#existing-item-fields').slideDown(200);
+                $('#custom-item-fields').slideUp(200);
+                $('#price-mode-section').slideDown(200);
+                $('#id_custom_item_name').val('');
+                $('#id_item_unit_price').val('');
+                setPriceMode('discount');
+            }
+        }
+
+        function setPriceMode(mode) {
+            if (mode === 'discount') {
+                $('#discount-field').show();
+                $('#id_item_unit_price').prop('readonly', true);
+                $('#id_discount_percentage').val('');
+                $('#id_item_unit_price').val('');
+                $('#btn-discount-mode').addClass('active');
+                $('#btn-manual-mode').removeClass('active');
+            } else {
+                $('#discount-field').hide();
+                $('#id_item_unit_price').prop('readonly', false);
+                $('#id_discount_percentage').val('');
+                $('#id_item_unit_price').val('');
+                $('#btn-discount-mode').removeClass('active');
+                $('#btn-manual-mode').addClass('active');
+            }
+        }
     </script>
 {% endblock %}

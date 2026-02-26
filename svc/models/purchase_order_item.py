@@ -1,4 +1,6 @@
-from django.db import models
+from decimal import Decimal, ROUND_HALF_UP
+
+from django.db import models, transaction
 from django.db.models import F
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
@@ -16,14 +18,16 @@ class PurchaseOrderItem(BaseModel):
     total_amount = models.DecimalField(max_digits=10, decimal_places=0)
 
     def save(self, *args, **kwargs):
+
         if self.discount_percentage is not None:
-            discount_amount = (self.item_MRP * self.discount_percentage) / 100  # NOQA
+            discount_amount = (self.item_MRP * self.discount_percentage) / Decimal('100')  # NOQA
             discounted_price = self.item_MRP - discount_amount  # NOQA
-            self.unit_price = discounted_price
-            self.total_amount = discounted_price * self.quantity  # NOQA
+
+            self.unit_price = discounted_price.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+
         else:
-            self.unit_price = self.net_price
-            self.total_amount = self.net_price * self.quantity  # NOQA
+            self.unit_price = Decimal(self.net_price)  # NOQA
+        self.total_amount = self.unit_price * self.quantity  # NOQA
         super().save(*args, **kwargs)
         # Update the po_amount in the related PurchaseOrder
         self.purchase_order.po_amount = self.purchase_order.calculate_po_amount()  # NOQA
@@ -65,3 +69,4 @@ def update_po_amount_on_delete(sender, instance, **kwargs):
     instance.purchase_order.po_amount = instance.purchase_order.calculate_po_amount()
     instance.purchase_order.save()
     instance.purchase_order.vendor.update_vendor()
+

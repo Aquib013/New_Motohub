@@ -6,6 +6,7 @@ from django.db import models, transaction
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
+from django.utils.timezone import now
 
 from svc.models import BaseModel, Customer, Vehicle
 
@@ -18,6 +19,7 @@ JOB_STATUS = (
 class Job(BaseModel):
     job_no = models.CharField(unique=True)
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)
+    job_date = models.DateField(default=now, help_text="Date of the job (can be backdated)")
     vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True)
     status = models.CharField(choices=JOB_STATUS, null=True, blank=True, default="Pending")
     license_plate = models.CharField(null=True, blank=True)
@@ -32,33 +34,39 @@ class Job(BaseModel):
         return f"{self.customer} - {self.job_no}"
 
     @staticmethod
-    def unique_job_no():
-        today = datetime.now()
-        date = datetime.now().date().strftime("%d%m%Y")
+    def unique_job_no(date=None):
+        if date is None:
+            date = datetime.now().date()
+        date_str = date.strftime("%d%m%Y")
         with transaction.atomic():
-            # Lock the row for update to avoid race conditions
-            last_job = Job.objects.filter(created_at__date=today).select_for_update().order_by("-created_at").first()
+            # Filter by job_date, not created_at
+            last_job = Job.objects.filter(job_date=date).select_for_update().order_by("-id").first()
             if last_job is None:
                 counter = 1
             else:
-                # Extract the counter from the last job_no and increment it
-                last_job_no = last_job.job_no
-                last_counter = int(last_job_no.split("-")[1])
-                counter = last_counter + 1
+                try:
+                    last_counter = int(last_job.job_no.split("-")[1])
+                    counter = last_counter + 1
+                except (IndexError, ValueError):
+                    counter = 1
 
-            job_no = f"{date}-{counter}"
+            # Check if this job_no already exists (safety check)
+            job_no = f"{date_str}-{counter}"
+            while Job.objects.filter(job_no=job_no).exists():
+                counter += 1
+                job_no = f"{date_str}-{counter}"
+
             return job_no
 
     def save(self, *args, **kwargs):
         if not self.job_no:
-            self.job_no = self.unique_job_no()
+            self.job_no = self.unique_job_no(self.job_date)   # NOQA
         if self.status == 'Completed' and self.job_completion_time is None:
             self.job_completion_time = timezone.now()
         elif self.status != "Completed":
             self.job_completion_time = None
-        item_cost = Decimal(self.total_item_cost) if self.total_item_cost else Decimal(0)  # NOQA
-        service_cost = Decimal(self.total_service_cost) if self.total_service_cost else Decimal(0)  # NOQA
-
+        item_cost = Decimal(self.total_item_cost) if self.total_item_cost else Decimal(0)
+        service_cost = Decimal(self.total_service_cost) if self.total_service_cost else Decimal(0)
         self.job_amount = item_cost + service_cost
         super(Job, self).save(*args, **kwargs)
 
@@ -73,7 +81,7 @@ def update_customer_on_job_creation(sender, instance, created, **kwargs):
     if instance.status == 'Completed' and instance.customer is not None:
         customer = instance.customer
         customer.last_billed_amount = instance.job_amount
-        customer.last_billed_date = instance.created_at
+        customer.last_billed_date = instance.job_date
         customer.save()
 
 
@@ -90,7 +98,7 @@ def update_customer_on_job_deletion(sender, instance, **kwargs):
 
     if previous_job:
         customer.last_billed_amount = previous_job.job_amount
-        customer.last_billed_date = previous_job.created_at
+        customer.last_billed_date = previous_job.job_date
     else:
         customer.last_billed_amount = None
         customer.last_billed_date = None

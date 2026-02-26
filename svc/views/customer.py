@@ -21,8 +21,9 @@ class CustomerListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['mechanic_customers'] = Customer.objects.filter(customer_type='Mechanic')
-        context['non_mechanic_customers'] = Customer.objects.filter(customer_type='Non-Mechanic')
+        context['mechanic_customers'] = Customer.objects.filter(customer_type='Mechanic').order_by('customer_name')
+        context['non_mechanic_customers'] = Customer.objects.filter(customer_type='Non-Mechanic').order_by(
+            'customer_name')
         return context
 
 
@@ -45,6 +46,11 @@ class CustomerUpdateView(UpdateView):
     template_name = "customer/customer_form.html"
     success_url = reverse_lazy("customers")
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['opening_balance'].disabled = True
+        return form
+
 
 class CustomerDeleteView(DeleteView):
     model = Customer
@@ -61,10 +67,19 @@ class CustomerJobsView(DetailView):
         context = super().get_context_data(**kwargs)
         customer = self.object
 
-        # Update dues and balance
         customer.update_dues_and_balance()
 
-        jobs = customer.job_set.filter(status__in=['Completed', 'Pending']).order_by("-created_at")
+        jobs = list(customer.job_set.filter(status='Completed').order_by("job_date", "job_completion_time"))
+        # Calculate running dues
+        running_dues = customer.opening_balance
+        for job in jobs:
+            running_dues += job.job_amount - job.paid_amount
+            job.running_dues = max(running_dues, 0)
+            job.running_balance = abs(min(running_dues, 0))
+
+        # Reverse for display (newest first)
+        jobs.reverse()
+
         context.update({
             'jobs': jobs,
             'total_dues': customer.dues,

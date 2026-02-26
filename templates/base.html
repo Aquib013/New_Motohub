@@ -11,16 +11,519 @@
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 
     <style>
-    .bg-completed { background-color: #28a745; }
-    .bg-in.progress { background-color: #ffc107; }
-    .bg-pending { background-color: #17a2b8; }
-    </style>
+    :root {
+        --bg-dark: #1a1d23;
+        --bg-sidebar: #13151a;
+        --bg-card: #22262e;
+        --border-subtle: rgba(255,255,255,0.06);
+        --text-primary: #e0e0e0;
+        --text-muted: #888;
+        --accent: #f59e0b;
+        --accent-hover: #d97706;
+    }
 
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+        background-color: var(--bg-dark);
+        color: var(--text-primary);
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+    .bg-completed { background-color: #22c55e; }
+    .bg-in-progress { background-color: #f59e0b; }
+    .bg-pending { background-color: #3b82f6; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+        background: var(--bg-sidebar);
+        min-height: 100vh;
+        padding: 0;
+        border-right: 1px solid var(--border-subtle);
+        font-size: 14px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 220px;
+        z-index: 1000;
+        overflow-y: auto;
+        transition: transform 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar-brand {
+        padding: 20px 20px 16px;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    .sidebar-brand h1 {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        color: #fff;
+        margin: 0;
+        letter-spacing: 0.5px;
+    }
+    .sidebar-brand h1 span {
+        color: var(--accent);
+    }
+    .sidebar-brand .brand-sub {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .sidebar .nav {
+        padding: 12px 0;
+        flex: 1;
+    }
+    .sidebar .nav-item {
+        margin: 1px 10px;
+    }
+    .sidebar .nav-link {
+        color: #aaa;
+        padding: 9px 14px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-weight: 400;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.2s;
+    }
+    .sidebar .nav-link i {
+        font-size: 15px;
+        width: 20px;
+        text-align: center;
+        opacity: 0.7;
+    }
+    .sidebar .nav-link:hover {
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+    }
+    .sidebar .nav-link:hover i {
+        opacity: 1;
+        color: var(--accent);
+    }
+    .sidebar .nav-link.active {
+        background: rgba(245, 158, 11, 0.12);
+        color: var(--accent);
+        font-weight: 500;
+    }
+    .sidebar .nav-link.active i {
+        opacity: 1;
+        color: var(--accent);
+    }
+
+    /* Submenu */
+    .sidebar .collapse .nav-item {
+        margin: 0 10px 0 20px;
+    }
+    .sidebar .collapse .nav-link {
+        font-size: 12.5px;
+        padding: 5px 14px;
+        color: #777;
+        position: relative;
+    }
+    .sidebar .collapse .nav-link::before {
+        content: '';
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #555;
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .sidebar .collapse .nav-link:hover {
+        color: #ddd;
+        background: none;
+    }
+    .sidebar .collapse .nav-link:hover::before {
+        background: var(--accent);
+    }
+
+    /* Dropdown toggle arrow */
+    .sidebar .nav-link.dropdown-toggle::after {
+        margin-left: auto;
+        font-size: 10px;
+        opacity: 0.4;
+    }
+
+    /* Logout */
+    .sidebar-logout {
+        padding: 12px 20px;
+        border-top: 1px solid var(--border-subtle);
+    }
+    .sidebar-logout .btn {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        font-size: 13px;
+        font-weight: 500;
+        padding: 7px 16px;
+        border-radius: 8px;
+        width: 100%;
+        transition: all 0.2s;
+    }
+    .sidebar-logout .btn:hover {
+        background: rgba(239, 68, 68, 0.25);
+        color: #f87171;
+    }
+
+    /* ── Mobile toggle ── */
+    .sidebar-toggle {
+        display: none;
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        z-index: 1100;
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        color: #fff;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        font-size: 18px;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* ── Main content ── */
+    .main-content {
+        margin-left: 220px;
+        min-height: 100vh;
+        padding: 0;
+        min-width: 0;
+    }
+
+    /* ── Alert messages ── */
+    .alert-custom {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1050;
+        padding: 12px 24px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 500;
+        text-align: center;
+        font-size: 14px;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+        font-family: 'Outfit', sans-serif;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .alert-success {
+        background: linear-gradient(135deg, #059669, #10b981);
+    }
+    .alert-error {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+    }
+
+    /* ── Global dark theme overrides ── */
+
+    /* Text & headings */
+    h1, h2, h3, h4, h5, h6, p, label, span, td, th, li, a {
+        color: inherit;
+    }
+    .text-dark { color: var(--text-primary) !important; }
+    .text-muted { color: var(--text-muted) !important; }
+
+    /* Tables */
+    .table {
+        color: var(--text-primary);
+        --bs-table-bg: transparent;
+        --bs-table-color: var(--text-primary);
+        border-color: var(--border-subtle);
+    }
+    .table th, .table td {
+        border-color: var(--border-subtle);
+        color: var(--text-primary);
+    }
+    .table-secondary, .table-secondary th, .table-secondary td {
+        --bs-table-bg: var(--bg-card);
+        --bs-table-border-color: var(--border-subtle);
+        --bs-table-color: var(--text-muted);
+        color: var(--text-muted) !important;
+        background: var(--bg-card) !important;
+    }
+    .table-hover tbody tr:hover {
+        background: rgba(255,255,255,0.03) !important;
+        color: #fff;
+        --bs-table-hover-bg: rgba(255,255,255,0.03);
+        --bs-table-hover-color: #fff;
+    }
+    .table-striped > tbody > tr:nth-of-type(odd) {
+        --bs-table-striped-bg: rgba(255,255,255,0.02);
+        --bs-table-striped-color: var(--text-primary);
+    }
+
+    /* Cards */
+    .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+    }
+    .card-header {
+        background: var(--bg-sidebar) !important;
+        border-bottom: 1px solid var(--border-subtle);
+        color: #fff;
+    }
+    .card-header.bg-dark,
+    .card-header.bg-primary,
+    .card-header.bg-secondary {
+        color: #fff !important;
+    }
+    .card-body {
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+    .card-title, .card-text {
+        color: var(--text-primary);
+    }
+
+    /* Forms */
+    .form-control, .form-select {
+        background: var(--bg-dark);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--text-primary);
+    }
+    .form-control:focus, .form-select:focus {
+        background: var(--bg-dark);
+        border-color: var(--accent);
+        color: var(--text-primary);
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+    }
+    .form-control::placeholder {
+        color: #666;
+    }
+    .form-control:disabled, .form-control[readonly] {
+        background: rgba(255,255,255,0.05);
+        color: var(--text-muted);
+    }
+    .form-label, .col-form-label, .form-check-label {
+        color: var(--text-primary);
+    }
+    .form-text {
+        color: var(--text-muted);
+    }
+    .input-group-text {
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--text-primary);
+    }
+
+    /* Select2 dark theme */
+    .select2-container--default .select2-selection--single {
+        background: var(--bg-dark);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--text-primary);
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: var(--text-primary);
+    }
+    .select2-container--default .select2-results__option {
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background: var(--accent);
+        color: var(--bg-dark);
+    }
+    .select2-dropdown {
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .select2-search__field {
+        background: var(--bg-dark) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+    }
+
+    /* Modals */
+    .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+    }
+    .modal-header {
+        border-bottom: 1px solid var(--border-subtle);
+        color: #fff;
+    }
+    .modal-footer {
+        border-top: 1px solid var(--border-subtle);
+    }
+    .modal-title {
+        color: #fff;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--bg-dark);
+    }
+    .btn-primary:hover {
+        background: var(--accent-hover);
+        border-color: var(--accent-hover);
+        color: var(--bg-dark);
+    }
+
+    /* Links */
+    a {
+        color: var(--accent);
+    }
+    a:hover {
+        color: var(--accent-hover);
+    }
+
+    /* Badges */
+    .badge {
+        font-weight: 500;
+    }
+
+    /* List groups */
+    .list-group-item {
+        background: var(--bg-card);
+        border-color: var(--border-subtle);
+        color: var(--text-primary);
+    }
+
+    /* Dropdowns */
+    .dropdown-menu {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+    }
+    .dropdown-item {
+        color: var(--text-primary);
+    }
+    .dropdown-item:hover {
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+    }
+
+    /* Breadcrumbs */
+    .breadcrumb {
+        background: transparent;
+    }
+    .breadcrumb-item, .breadcrumb-item a {
+        color: var(--text-muted);
+    }
+    .breadcrumb-item.active {
+        color: var(--text-primary);
+    }
+
+    /* Pagination */
+    .page-link {
+        background: var(--bg-card);
+        border-color: var(--border-subtle);
+        color: var(--text-primary);
+    }
+    .page-link:hover {
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+    }
+
+    /* Alerts inside content */
+    .alert-warning {
+        background: rgba(245, 158, 11, 0.15);
+        border-color: rgba(245, 158, 11, 0.3);
+        color: #fcd34d;
+    }
+    .alert-info {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: rgba(59, 130, 246, 0.3);
+        color: #93bbfd;
+    }
+
+    /* Misc Bootstrap overrides */
+    .table-danger, .table-danger td, .table-danger th {
+        background: rgba(239, 68, 68, 0.2) !important;
+        color: #fca5a5 !important;
+        --bs-table-bg: rgba(239, 68, 68, 0.2);
+        --bs-table-color: #fca5a5;
+    }
+    .table-warning, .table-warning td, .table-warning th {
+        background: rgba(245, 158, 11, 0.2) !important;
+        color: #fcd34d !important;
+        --bs-table-bg: rgba(245, 158, 11, 0.2);
+        --bs-table-color: #fcd34d;
+    }
+    .table-success, .table-success td, .table-success th {
+        background: rgba(34, 197, 94, 0.2) !important;
+        color: #86efac !important;
+        --bs-table-bg: rgba(34, 197, 94, 0.2);
+        --bs-table-color: #86efac;
+    }
+    .table-info, .table-info td, .table-info th {
+        background: rgba(59, 130, 246, 0.2) !important;
+        color: #93bbfd !important;
+        --bs-table-bg: rgba(59, 130, 246, 0.2);
+        --bs-table-color: #93bbfd;
+    }
+    .border-bottom {
+        border-color: var(--border-subtle) !important;
+    }
+    .bg-light {
+        background: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+    }
+    .bg-white {
+        background: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+    }
+    hr {
+        border-color: var(--border-subtle);
+        opacity: 1;
+    }
+    .container, .container-fluid {
+        color: var(--text-primary);
+    }
+    strong, b {
+        color: inherit;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
+        .sidebar.show {
+            transform: translateX(0);
+        }
+        .sidebar-toggle {
+            display: flex;
+        }
+        .main-content {
+            margin-left: 0;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .sidebar-overlay.show {
+            display: block;
+        }
+    }
+    </style>
 </head>
 <body>
+
 {% if messages %}
 <div id="message-container" style="display: none;">
     {% for message in messages %}
@@ -30,42 +533,120 @@
     {% endfor %}
 </div>
 {% endif %}
-<style>
-    body{
-        font-family: var(--font-styrene-b), sans-serif;
-        background-color: #a39d8b;
-    }
-    .sidebar {
-        width: 300px; /* Fixed width for sidebar */
-        background-color: #f4f4f4; /* Background color for sidebar */
-        min-height: 100vh; /* Ensures the sidebar takes full viewport height */
-        /* Optional: additional styling */
-        padding: 20px;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        font-size: 15px;
-    }
-    .alert-custom {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1050;
-        padding: 15px;
-        border-radius: 5px;
-        color: white;
-        font-weight: normal;
-        text-align: center;
-        font-size: 17px;
-        opacity: 0;
-        transition: opacity 0.5s ease-in-out;
-    }
-    .alert-success {
-        background-color: #28a745;
-    }
-    .alert-error {
-        background-color: #e87b9e;
-    }
-</style>
+
+<!-- Mobile sidebar toggle -->
+<button class="sidebar-toggle" onclick="toggleSidebar()">
+    <i class="bi bi-list"></i>
+</button>
+
+<!-- Mobile overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<nav id="sidebar" class="sidebar">
+    <div class="sidebar-brand">
+        <h1>Moto<span>Hub</span></h1>
+        <div class="brand-sub">Service Centre</div>
+    </div>
+
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                <i class="bi bi-grid-1x2"></i> Dashboard
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link dropdown-toggle" href="#itemsSubmenu" data-bs-toggle="collapse">
+                <i class="bi bi-box"></i> Items
+            </a>
+            <ul class="collapse nav flex-column" id="itemsSubmenu">
+                <li class="nav-item"><a class="nav-link" href="{% url 'item-list' %}">View All</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'item-create' %}">Create New</a></li>
+            </ul>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link dropdown-toggle" href="#customersSubmenu" data-bs-toggle="collapse">
+                <i class="bi bi-people"></i> Customers
+            </a>
+            <ul class="collapse nav flex-column" id="customersSubmenu">
+                <li class="nav-item"><a class="nav-link" href="{% url 'customers' %}">View All</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'add-customer' %}">Add New</a></li>
+            </ul>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link dropdown-toggle" href="#vendorsSubmenu" data-bs-toggle="collapse">
+                <i class="bi bi-shop"></i> Vendors
+            </a>
+            <ul class="collapse nav flex-column" id="vendorsSubmenu">
+                <li class="nav-item"><a class="nav-link" href="{% url 'vendors' %}">View All</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'add_vendor' %}">Add New</a></li>
+            </ul>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link dropdown-toggle" href="#purchaseOrdersSubmenu" data-bs-toggle="collapse">
+                <i class="bi bi-cart"></i> Purchase Orders
+            </a>
+            <ul class="collapse nav flex-column" id="purchaseOrdersSubmenu">
+                <li class="nav-item"><a class="nav-link" href="{% url 'purchase-orders' %}">View All</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'purchase-order-create' %}">Create New</a></li>
+            </ul>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link dropdown-toggle" href="#jobsSubmenu" data-bs-toggle="collapse">
+                <i class="bi bi-clipboard-check"></i> Jobs
+            </a>
+            <ul class="collapse nav flex-column" id="jobsSubmenu">
+                <li class="nav-item"><a class="nav-link" href="{% url 'jobs' %}">View All</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'create_job' %}">Create New</a></li>
+            </ul>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link dropdown-toggle" href="#employeesSubmenu" data-bs-toggle="collapse">
+                <i class="bi bi-person-badge"></i> Employees
+            </a>
+            <ul class="collapse nav flex-column" id="employeesSubmenu">
+                <li class="nav-item"><a class="nav-link" href="{% url 'employees' %}">View All</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'create_employee' %}">Add Employee</a></li>
+            </ul>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link dropdown-toggle" href="#expensesSubmenu" data-bs-toggle="collapse">
+                <i class="bi bi-wallet2"></i> Expenses
+            </a>
+            <ul class="collapse nav flex-column" id="expensesSubmenu">
+                <li class="nav-item"><a class="nav-link" href="{% url 'expense_list' %}">View All</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'expense_create' %}">Add Expense</a></li>
+            </ul>
+        </li>
+    </ul>
+
+    <div class="sidebar-logout">
+        <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn">
+                <i class="bi bi-box-arrow-right me-2"></i> Log Out
+            </button>
+        </form>
+    </div>
+</nav>
+
+<!-- Main content -->
+<main class="main-content">
+    {% block content %}
+    {% endblock %}
+</main>
+
+<!-- Bootstrap JS -->
+<script src="{% static 'js/jquery-3.5.1.slim.min.js' %}"></script>
+<script src="{% static 'js/popper.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -78,46 +659,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function deleteJob(jobId) {
-    if (confirm('Are you sure you want to delete this job?')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/delete-job/${jobId}/`;
-
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = 'csrfmiddlewaretoken';
-        csrfInput.value = getCookie('csrftoken');
-
-        form.appendChild(csrfInput);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
 function showAlert(message, type) {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert-custom alert-${type}`;
     alertDiv.innerHTML = message;
-
     document.body.appendChild(alertDiv);
-
-    // Trigger reflow to enable transition
     alertDiv.offsetHeight;
-
-    // Fade in
     alertDiv.style.opacity = '1';
-
     setTimeout(() => {
-        // Fade out
         alertDiv.style.opacity = '0';
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 500); // Wait for fade out transition to complete
-    }, 4500); // Show for 4.5 seconds before starting to fade out
+        setTimeout(() => alertDiv.remove(), 500);
+    }, 4500);
 }
 
-// Helper function to get CSRF token
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -132,105 +686,28 @@ function getCookie(name) {
     }
     return cookieValue;
 }
-</script>
-<div class="container-fluid">
-    <div class="row flex-nowrap">
-        <!-- Sidebar -->
-        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-secondary sidebar">
-            <div class="position-sticky">
-                <h1 class="sidebar-heading text-white">MotoHub</h1>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %} text-white " href="{% url 'dashboard' %}">
-                            <i class="bi bi-house-door"></i> Home
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link dropdown-toggle text-white" href="#itemsSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="itemsSubmenu">
-                            <i class="bi bi-box"></i> Items
-                        </a>
-                        <ul class="collapse nav flex-column" id="itemsSubmenu">
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'item-list' %}">View All</a></li>
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'item-create' %}">Create New</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link dropdown-toggle text-white" href="#customersSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="customersSubmenu">
-                            <i class="bi bi-people"></i> Customers
-                        </a>
-                        <ul class="collapse nav flex-column" id="customersSubmenu">
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'customers' %}">View All</a></li>
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'add-customer' %}">Add New</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link dropdown-toggle text-white" href="#vendorsSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="vendorsSubmenu">
-                            <i class="bi bi-shop"></i> Vendors
-                        </a>
-                        <ul class="collapse nav flex-column" id="vendorsSubmenu">
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'vendors' %}">View All</a></li>
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'add_vendor' %}">Add New</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link dropdown-toggle text-white" href="#purchaseOrdersSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="purchaseOrdersSubmenu">
-                            <i class="bi bi-cart"></i> Purchase Orders
-                        </a>
-                        <ul class="collapse nav flex-column" id="purchaseOrdersSubmenu">
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'purchase-orders' %}">View All</a></li>
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'purchase-order-create' %}">Create New</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link dropdown-toggle text-white" href="#jobsSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="jobsSubmenu">
-                            <i class="bi bi-file-earmark-text"></i> Jobs
-                        </a>
-                        <ul class="collapse nav flex-column" id="jobsSubmenu">
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'jobs' %}">View All</a></li>
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'create_job' %}">Create New</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link dropdown-toggle text-white" href="#employeesSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="employeesSubmenu">
-                            <i class="bi bi-file-earmark-text"></i> Employees
-                        </a>
-                        <ul class="collapse nav flex-column" id="employeesSubmenu">
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'employees' %}">View All</a></li>
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'create_employee' %}">Add Employee</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link dropdown-toggle text-white" href="#expensesSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="expensesSubmenu">
-                            <i class="bi bi-file-earmark-text"></i> Expenses
-                        </a>
-                        <ul class="collapse nav flex-column" id="expensesSubmenu">
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'expense_list' %}">View All</a></li>
-                            <li class="nav-item"><a class="nav-link py-1 text-white" href="{% url 'expense_create' %}">Add Expense</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <form action="{% url 'logout' %}" method="post" class="nav-link">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm">
-                                <i class="bi bi-box-arrow-right"></i> Log Out
-                            </button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-        <!-- Main content -->
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-1">
-            {% block content %}
-            {% endblock %}
-        </main>
-    </div>
-</div>
-    <!-- Bootstrap JS and dependencies -->
-    <script src="{% static 'js/jquery-3.5.1.slim.min.js' %}"></script>
-    <script src="{% static 'js/popper.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
-    {% block extra_js %}{% endblock %}
 
+function deleteJob(jobId) {
+    if (confirm('Are you sure you want to delete this job?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/delete-job/${jobId}/`;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = getCookie('csrftoken');
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('show');
+    document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+
+{% block extra_js %}{% endblock %}
 </body>
 </html>

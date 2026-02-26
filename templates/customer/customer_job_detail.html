@@ -16,7 +16,7 @@
               <p><strong>Job Number:</strong> {{ job.job_no }}</p>
               <p><strong>Customer:</strong> {{ job.customer.customer_name }}</p>
               {% if job.status == "Completed" %}
-                <p><strong>Completion Time:</strong> {{ job.job_completion_time|date:"d M Y, H:i" }}</p>
+              <p><strong>Job Date:</strong> {{ job.job_date|date:"d M Y" }}</p>
               {% endif %}
               <p><strong>Job Amount:</strong> ₹{{ job.job_amount|floatformat:2 }}</p>
             </div>

@@ -44,18 +44,19 @@
                   </tr>
                 </thead>
                 <tbody>
+
                   {% for job in jobs %}
                     <tr>
                       <td>{{ job.job_no }}</td>
-                      <td>{{ job.created_at|date:"d M Y" }}</td>
+                      <td>{{ job.job_date|date:"d M Y" }}</td>
                       <td>{{ job.vehicle.name }}</td>
                       <td class="text-right">₹{{ job.job_amount|floatformat:2 }}</td>
                       <td class="text-right">₹{{ job.paid_amount|floatformat:2 }}</td>
                       <td class="text-right">
-                        {% if job.paid_amount < job.job_amount %}
-                          Due: ₹{{ job.job_amount|sub:job.paid_amount|floatformat:2 }}
-                        {% elif job.paid_amount > job.job_amount %}
-                          Balance: ₹{{ job.paid_amount|sub:job.job_amount|floatformat:2 }}
+                        {% if job.running_dues > 0 %}
+                          Due: ₹{{ job.running_dues|floatformat:2 }}
+                        {% elif job.running_balance > 0 %}
+                          Balance: ₹{{ job.running_balance|floatformat:2 }}
                         {% else %}
                           Settled
                         {% endif %}
@@ -68,6 +69,15 @@
                     </tr>
                   {% endfor %}
                 </tbody>
+                {% if customer.opening_balance > 0 %}
+                    <tr class="table-warning">
+                      <td colspan="3"><strong>Old Dues</strong></td>
+                      <td class="text-right"></td>
+                      <td class="text-right"></td>
+                      <td class="text-right"><strong>Due: ₹{{ customer.opening_balance|floatformat:2 }}</strong></td>
+                      <td></td>
+                    </tr>
+                  {% endif %}
               </table>
             </div>
           {% else %}

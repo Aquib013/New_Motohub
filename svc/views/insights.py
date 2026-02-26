@@ -1,5 +1,4 @@
 from django.db.models import Sum
-
 from django.utils import timezone
 
 from svc.models import Job, Expense, Service, JobItem, PurchaseOrder
@@ -12,29 +11,29 @@ def get_insights(start_date=None, end_date=None):
 
     machining_revenue = Service.objects.filter(
         service_type='Machining',
-        job__job_completion_time__date__range=[start_date, end_date]
+        job__job_date__range=[start_date, end_date]
     ).aggregate(Sum('service_cost'))['service_cost__sum'] or 0
 
     workshop_revenue = Service.objects.filter(
         service_type='Workshop',
-        job__job_completion_time__date__range=[start_date, end_date]
+        job__job_date__range=[start_date, end_date]
     ).aggregate(Sum('service_cost'))['service_cost__sum'] or 0
 
     total_service_revenue = Job.objects.filter(
-        job_completion_time__date__range=[start_date, end_date]
+        job_date__range=[start_date, end_date]
     ).aggregate(Sum('total_service_cost'))['total_service_cost__sum'] or 0
 
     total_item_revenue = Job.objects.filter(
-        job_completion_time__date__range=[start_date, end_date]
+        job_date__range=[start_date, end_date]
     ).aggregate(Sum('total_item_cost'))['total_item_cost__sum'] or 0
 
     total_profit_by_item = sum(
-        (job_item.item_unit_price - job_item.item.cost_price) * job_item.item_quantity
-        for job_item in JobItem.objects.filter(job__job_completion_time__date__range=[start_date, end_date])
+        (job_item.item_unit_price - (job_item.item.cost_price if job_item.item else 0)) * job_item.item_quantity
+        for job_item in JobItem.objects.filter(job__job_date__range=[start_date, end_date])
     )
 
     total_revenue = Job.objects.filter(
-        job_completion_time__date__range=[start_date, end_date]
+        job_date__range=[start_date, end_date]
     ).aggregate(Sum('paid_amount'))['paid_amount__sum'] or 0
 
     total_expense = Expense.objects.filter(
@@ -42,7 +41,7 @@ def get_insights(start_date=None, end_date=None):
     ).aggregate(Sum('amount'))['amount__sum'] or 0
 
     item_purchased = PurchaseOrder.objects.filter(
-        created_at__date__range=[start_date, end_date]
+        po_date__range=[start_date, end_date]
     ).aggregate(Sum('po_amount'))['po_amount__sum'] or 0
 
     total_income = total_revenue - total_expense

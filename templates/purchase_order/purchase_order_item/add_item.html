@@ -2,11 +2,15 @@
 {% load widget_tweaks %}
 {% load static %}
 
-
 {% block title %}{% if form.instance.pk %}Update PO Items{% else %}Add PO Items{% endif %}{% endblock %}
 
 {% block extra_css %}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -16,22 +20,109 @@
       <div class="card">
         <div class="card-header bg-primary text-white">
           <h2 class="mb-0">{% if form.instance.pk %}Update Item to Purchase Order {{ purchase_order.po_number }}
-            {% else %}Add Item to Purchase Order{{ purchase_order.po_number }}{% endif %}</h2>
+            {% else %}Add Item to Purchase Order {{ purchase_order.po_number }}{% endif %}</h2>
         </div>
         <div class="card-body">
           <form method="post">
             {% csrf_token %}
-            {% for field in form %}
+
+            <!-- Is New Item Checkbox -->
+            <div class="form-group row mb-3">
+              <div class="col-sm-9 offset-sm-3">
+                <div class="form-check">
+                  {{ form.is_new_item }}
+                  <label class="form-check-label" for="{{ form.is_new_item.id_for_label }}">
+                    {{ form.is_new_item.label }}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Existing Item Select (shown by default) -->
+            <div id="existing-item-field">
               <div class="form-group row mb-3">
-                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">{{ field.label }}</label>
+                <label for="{{ form.item.id_for_label }}" class="col-sm-3 col-form-label">Item</label>
                 <div class="col-sm-9">
-                  {{ field|add_class:"form-control" }}
-                  {% if field.errors %}
-                    <small class="text-danger">{{ field.errors|striptags }}</small>
+                  {{ form.item|add_class:"form-control" }}
+                  {% if form.item.errors %}
+                    <small class="text-danger">{{ form.item.errors|striptags }}</small>
                   {% endif %}
                 </div>
               </div>
+            </div>
+
+            <!-- New Item Fields (hidden by default) -->
+            <div id="new-item-fields" style="display: none;">
+              <div class="form-group row mb-3">
+                <label for="{{ form.new_item_brand.id_for_label }}" class="col-sm-3 col-form-label">Brand</label>
+                <div class="col-sm-9">
+                  {{ form.new_item_brand }}
+                  {% if form.new_item_brand.errors %}
+                    <small class="text-danger">{{ form.new_item_brand.errors|striptags }}</small>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group row mb-3">
+                <label for="{{ form.new_item.id_for_label }}" class="col-sm-3 col-form-label">Item Name</label>
+                <div class="col-sm-9">
+                  {{ form.new_item }}
+                  {% if form.new_item.errors %}
+                    <small class="text-danger">{{ form.new_item.errors|striptags }}</small>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group row mb-3">
+                <label for="{{ form.new_item_size.id_for_label }}" class="col-sm-3 col-form-label">Size</label>
+                <div class="col-sm-9">
+                  {{ form.new_item_size }}
+                  {% if form.new_item_size.errors %}
+                    <small class="text-danger">{{ form.new_item_size.errors|striptags }}</small>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group row mb-3">
+                <label for="{{ form.new_item_for_vehicle.id_for_label }}" class="col-sm-3 col-form-label">Vehicle</label>
+                <div class="col-sm-9">
+                  {{ form.new_item_for_vehicle|add_class:"form-control" }}
+                  {% if form.new_item_for_vehicle.errors %}
+                    <small class="text-danger">{{ form.new_item_for_vehicle.errors|striptags }}</small>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group row mb-3">
+                <label for="{{ form.new_item_type.id_for_label }}" class="col-sm-3 col-form-label">Item Type</label>
+                <div class="col-sm-9">
+                  {{ form.new_item_type }}
+                  {% if form.new_item_type.errors %}
+                    <small class="text-danger">{{ form.new_item_type.errors|striptags }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Common Fields (always visible) -->
+            {% for field in form %}
+              {% if field.name != 'is_new_item' and field.name != 'item' and field.name != 'new_item_brand' and field.name != 'new_item' and field.name != 'new_item_size' and field.name != 'new_item_for_vehicle' and field.name != 'new_item_type' %}
+                <div class="form-group row mb-3">
+                  <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">{{ field.label }}</label>
+                  <div class="col-sm-9">
+                    {{ field|add_class:"form-control" }}
+                    {% if field.errors %}
+                      <small class="text-danger">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endif %}
             {% endfor %}
+
+            {% if form.non_field_errors %}
+              <div class="form-group row mb-3">
+                <div class="col-sm-9 offset-sm-3">
+                  <small class="text-danger">{{ form.non_field_errors|striptags }}</small>
+                </div>
+              </div>
+            {% endif %}
+
             <div class="form-group row">
               <div class="col-sm-9 offset-sm-3">
                 <button type="submit" class="btn btn-primary">
@@ -56,6 +147,35 @@
                 placeholder: 'Select an item',
                 allowClear: true
             });
+
+            $('#id_new_item_for_vehicle').select2({
+                placeholder: 'Select a vehicle',
+                allowClear: true
+            });
+
+            // Handle page reload with checkbox already checked (e.g. validation errors)
+            if ($('#id_is_new_item').is(':checked')) {
+                $('#existing-item-field').hide();
+                $('#new-item-fields').show();
+            }
         });
+
+        function toggleNewItem(checkbox) {
+            if (checkbox.checked) {
+                $('#existing-item-field').slideUp(200);
+                $('#new-item-fields').slideDown(200);
+                // Clear existing item selection
+                $('#id_item').val(null).trigger('change');
+            } else {
+                $('#new-item-fields').slideUp(200);
+                $('#existing-item-field').slideDown(200);
+                // Clear new item fields
+                $('#id_new_item_brand').val('');
+                $('#id_new_item').val('');
+                $('#id_new_item_size').val('');
+                $('#id_new_item_for_vehicle').val(null).trigger('change');
+                $('#id_new_item_type').val('');
+            }
+        }
     </script>
 {% endblock %}

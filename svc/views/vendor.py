@@ -53,13 +53,12 @@ class VendorPurchaseOrdersView(DetailView):
     model = Vendor
     template_name = "vendor/vendor_pos.html"
     context_object_name = "vendor"
-    ordering = ['-created_at']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         vendor = self.get_object()
         # Ordering the related purchase orders by created_at
-        purchase_orders = vendor.purchase_orders.all().order_by('-created_at')
+        purchase_orders = vendor.purchase_orders.all().order_by('-po_date')
         context['purchase_orders'] = purchase_orders
         return context
 

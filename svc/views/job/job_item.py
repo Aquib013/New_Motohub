@@ -1,10 +1,11 @@
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import UpdateView, CreateView, DeleteView
 
 from svc.forms import JobItemForm
-from svc.models import JobItem, Job
+from svc.models import JobItem, Job, Item
 
 
 class JobItemAddView(CreateView):
@@ -86,3 +87,18 @@ class JobItemDeleteView(DeleteView):
         context = super().get_context_data(**kwargs)
         context['job'] = self.object.job
         return context
+
+    # API endpoint for item details
+
+
+def get_item_details(request):
+    item_id = request.GET.get('id')
+    try:
+        item = Item.objects.get(id=item_id)
+        return JsonResponse({
+            'item_MRP': str(item.item_MRP),
+            'cost_price': str(item.cost_price),
+            'stock': item.item_quantity_in_stock,
+        })
+    except Item.DoesNotExist:  # NOQA
+        return JsonResponse({'error': 'Item not found'}, status=404)

@@ -15,10 +15,9 @@ class PurchaseOrderListView(ListView):
     def get_queryset(self):
         selected_date = self.request.GET.get('date')
         if selected_date:
-            return PurchaseOrder.objects.filter(created_at__date=selected_date).order_by('po_number')
+            return PurchaseOrder.objects.filter(po_date=selected_date).order_by('po_number')
         else:
-            # Default to today's jobs
-            return PurchaseOrder.objects.filter(created_at__date=timezone.now().date()).order_by('po_number')
+            return PurchaseOrder.objects.filter(po_date=timezone.now().date()).order_by('po_number')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -32,7 +31,7 @@ class PurchaseOrderCreateView(CreateView):
     template_name = 'purchase_order/purchase_order_form.html'
 
     def form_valid(self, form):
-        self.object = form.save()
+        self.object = form.save()  # NOQA
         messages.success(self.request, "Purchase Order created successfully.")
         return super().form_valid(form)
 

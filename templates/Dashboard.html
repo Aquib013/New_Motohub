@@ -2,159 +2,476 @@
 
 {% block title %}MotoHub Dashboard{% endblock %}
 
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    .dashboard-wrap {
+        font-family: 'Outfit', sans-serif;
+        padding: 20px;
+        min-height: 100vh;
+        background: #1a1d23;
+        color: #e0e0e0;
+    }
+
+    /* ── Header ── */
+    .dash-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .dash-header h1 {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        font-size: 28px;
+        color: #fff;
+        margin: 0;
+        letter-spacing: 0.5px;
+    }
+    .dash-header h1 span {
+        color: #f59e0b;
+    }
+    .dash-subtitle {
+        font-size: 13px;
+        color: #888;
+        margin-top: 2px;
+    }
+
+    /* ── Date Filter ── */
+    .date-filter {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #22262e;
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+    .date-filter label {
+        font-size: 12px;
+        color: #888;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+    .date-filter input[type="date"] {
+        background: #1a1d23;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #e0e0e0;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: 'Outfit', sans-serif;
+    }
+    .date-filter input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(0.7);
+    }
+    .date-filter .btn-apply {
+        background: #f59e0b;
+        color: #1a1d23;
+        border: none;
+        padding: 5px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .date-filter .btn-apply:hover {
+        background: #d97706;
+        transform: translateY(-1px);
+    }
+
+    /* ── Low Stock Alert ── */
+    .low-stock-alert {
+        background: linear-gradient(135deg, #44220a 0%, #2d1a0a 100%);
+        border: 1px solid #f59e0b33;
+        border-radius: 10px;
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        animation: pulse-border 2s ease-in-out infinite;
+    }
+    @keyframes pulse-border {
+        0%, 100% { border-color: #f59e0b33; }
+        50% { border-color: #f59e0b88; }
+    }
+    .low-stock-alert .alert-icon {
+        font-size: 20px;
+        margin-right: 10px;
+    }
+    .low-stock-alert .alert-text {
+        font-size: 14px;
+        color: #fbbf24;
+        font-weight: 500;
+    }
+    .low-stock-alert .alert-text strong {
+        color: #fcd34d;
+    }
+    .low-stock-alert .btn-stock {
+        background: #f59e0b;
+        color: #1a1d23;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .low-stock-alert .btn-stock:hover {
+        background: #fbbf24;
+    }
+
+    /* ── Modal ── */
+    .modal-content {
+        background: #22262e;
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #e0e0e0;
+    }
+    .modal-header {
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .modal-header .modal-title {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+    }
+    .modal-footer {
+        border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .modal-body ul {
+        list-style: none;
+        padding: 0;
+    }
+    .modal-body ul li {
+        padding: 8px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .modal-body ul li:last-child {
+        border-bottom: none;
+    }
+    .stock-qty {
+        color: #ef4444;
+        font-weight: 600;
+    }
+
+    /* ── Insights Date Label ── */
+    .insights-label {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 16px;
+    }
+    .insights-label .date-highlight {
+        color: #f59e0b;
+    }
+
+    /* ── Hero Card (Total Income) ── */
+    .hero-card {
+        background: linear-gradient(135deg, #0f4c2e 0%, #14532d 50%, #166534 100%);
+        border: 1px solid #22c55e33;
+        border-radius: 14px;
+        padding: 28px 32px;
+        margin-bottom: 28px;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-card::before {
+        content: '₹';
+        position: absolute;
+        right: 20px;
+        top: -10px;
+        font-size: 120px;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        color: rgba(255,255,255,0.04);
+        line-height: 1;
+    }
+    .hero-card .hero-label {
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #86efac;
+        margin-bottom: 6px;
+    }
+    .hero-card .hero-value {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 42px;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1;
+    }
+
+    /* ── Insight Cards Grid ── */
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    @media (max-width: 1200px) { .cards-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .cards-grid { grid-template-columns: 1fr; } }
+
+    .insight-card {
+        background: #22262e;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .insight-card:hover {
+        border-color: rgba(255,255,255,0.12);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .insight-card .card-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        margin-bottom: 14px;
+    }
+    .insight-card .card-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #888;
+        margin-bottom: 6px;
+    }
+    .insight-card .card-value {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 26px;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1;
+    }
+    .insight-card .card-stripe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+    }
+
+    /* Card color variants */
+    .card-blue .card-icon { background: #1e3a5f; color: #60a5fa; }
+    .card-blue .card-stripe { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
+    .card-blue .card-value { color: #93bbfd; }
+
+    .card-cyan .card-icon { background: #164e63; color: #22d3ee; }
+    .card-cyan .card-stripe { background: linear-gradient(90deg, #06b6d4, #0891b2); }
+    .card-cyan .card-value { color: #67e8f9; }
+
+    .card-amber .card-icon { background: #451a03; color: #fbbf24; }
+    .card-amber .card-stripe { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .card-amber .card-value { color: #fcd34d; }
+
+    .card-emerald .card-icon { background: #064e3b; color: #34d399; }
+    .card-emerald .card-stripe { background: linear-gradient(90deg, #10b981, #059669); }
+    .card-emerald .card-value { color: #6ee7b7; }
+
+    .card-rose .card-icon { background: #4c0519; color: #fb7185; }
+    .card-rose .card-stripe { background: linear-gradient(90deg, #f43f5e, #e11d48); }
+    .card-rose .card-value { color: #fda4af; }
+
+    .card-violet .card-icon { background: #2e1065; color: #a78bfa; }
+    .card-violet .card-stripe { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+    .card-violet .card-value { color: #c4b5fd; }
+
+    .card-orange .card-icon { background: #431407; color: #fb923c; }
+    .card-orange .card-stripe { background: linear-gradient(90deg, #f97316, #ea580c); }
+    .card-orange .card-value { color: #fdba74; }
+
+    .card-teal .card-icon { background: #134e4a; color: #2dd4bf; }
+    .card-teal .card-stripe { background: linear-gradient(90deg, #14b8a6, #0d9488); }
+    .card-teal .card-value { color: #5eead4; }
+
+    /* ── Staggered entrance animation ── */
+    .fade-up {
+        opacity: 0;
+        transform: translateY(16px);
+        animation: fadeUp 0.5s ease forwards;
+    }
+    @keyframes fadeUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .delay-1 { animation-delay: 0.05s; }
+    .delay-2 { animation-delay: 0.1s; }
+    .delay-3 { animation-delay: 0.15s; }
+    .delay-4 { animation-delay: 0.2s; }
+    .delay-5 { animation-delay: 0.25s; }
+    .delay-6 { animation-delay: 0.3s; }
+    .delay-7 { animation-delay: 0.35s; }
+    .delay-8 { animation-delay: 0.4s; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid min-vh-100 d-flex flex-column">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom">
-        <h1 class="h2">Welcome, {{ user.first_name }} {{ user.last_name }}!</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <form class="d-flex align-items-center" onsubmit="return setDateRange()">
-                <label for="start-date" class="me-2">From:</label>
-                <input type="date" id="start-date" name="start-date" class="form-control form-control-sm me-2" value="{{ start_date|date:'Y-m-d' }}">
-                <label for="end-date" class="me-2">To:</label>
-                <input type="date" id="end-date" name="end-date" class="form-control form-control-sm me-2" value="{{ end_date|date:'Y-m-d' }}">
-                <button type="submit" class="btn btn-sm btn-primary">Apply</button>
-            </form>
-        </div>
-    </div>
+<div class="dashboard-wrap">
 
-    {% if low_stock_items %}
-    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+    <!-- Header -->
+    <div class="dash-header">
         <div>
-            <strong>Low Stock Alert:</strong> {{ low_stock_items.count }} items are low in stock.
+            <h1>Moto<span>Hub</span> Dashboard</h1>
+            <div class="dash-subtitle">Business overview &amp; daily insights</div>
         </div>
-        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#lowStockModal">
-            View Details
-        </button>
+        <form class="date-filter" onsubmit="return setDateRange()">
+            <label for="start-date">From</label>
+            <input type="date" id="start-date" name="start-date" value="{{ start_date|date:'Y-m-d' }}">
+            <label for="end-date">To</label>
+            <input type="date" id="end-date" name="end-date" value="{{ end_date|date:'Y-m-d' }}">
+            <button type="submit" class="btn-apply">Apply</button>
+        </form>
     </div>
 
-    <!-- Modal for Low Stock Items -->
+    <!-- Low Stock Alert -->
+    {% if low_stock_items %}
+    <div class="low-stock-alert fade-up">
+        <div class="d-flex align-items-center">
+            <span class="alert-icon">⚠️</span>
+            <span class="alert-text"><strong>{{ low_stock_items.count }} items</strong> are running low on stock</span>
+        </div>
+        <button class="btn-stock" data-bs-toggle="modal" data-bs-target="#lowStockModal">View Items</button>
+    </div>
+
+    <!-- Low Stock Modal -->
     <div class="modal fade" id="lowStockModal" tabindex="-1" aria-labelledby="lowStockModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="lowStockModalLabel">Low Stock Items</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="lowStockModalLabel">⚠️ Low Stock Items</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <ul>
                         {% for item in low_stock_items %}
-                            <li>{{ item.item_name }} - Quantity: {{ item.item_quantity_in_stock }}</li>
+                        <li>
+                            <span>{{ item.item_name }}</span>
+                            <span class="stock-qty">{{ item.item_quantity_in_stock }} left</span>
+                        </li>
                         {% endfor %}
                     </ul>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- Insights Header -->
-    <div class="row">
-        <div class="col-12">
-            <h2 class="mb-4">
-                Insights for
-                {% if start_date == end_date %}
-                    {{ start_date|date:"F j, Y" }}
-                {% else %}
-                    {{ start_date|date:"F j, Y" }} to {{ end_date|date:"F j, Y" }}
-                {% endif %}
-            </h2>
-        </div>
+    <!-- Insights Date Label -->
+    <div class="insights-label fade-up">
+        Insights for
+        <span class="date-highlight">
+        {% if start_date == end_date %}
+            {{ start_date|date:"d M Y" }}
+        {% else %}
+            {{ start_date|date:"d M Y" }} — {{ end_date|date:"d M Y" }}
+        {% endif %}
+        </span>
     </div>
 
-    <!-- Total Income Card -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-success text-white shadow-sm">
-                <div class="card-body">
-                    <h2 class="card-title text-center mb-0">
-                        <strong>Total Income: ₹ {{ total_income }}</strong>
-                    </h2>
-                </div>
-            </div>
-        </div>
+    <!-- Hero: Total Income -->
+    <div class="hero-card fade-up delay-1">
+        <div class="hero-label">Total Income</div>
+        <div class="hero-value">₹ {{ total_income }}</div>
     </div>
 
-    <!-- Responsive Insight Cards -->
-    <div class="row">
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="card border-info shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title"><strong>Total Revenue By Service</strong></h5>
-                    <p class="card-text text-primary">₹ {{ total_service_revenue }}</p>
-                </div>
-            </div>
+    <!-- Insight Cards -->
+    <div class="cards-grid">
+
+        <div class="insight-card card-blue fade-up delay-1">
+            <div class="card-stripe"></div>
+            <div class="card-icon"><i class="bi bi-wrench"></i></div>
+            <div class="card-label">Service Revenue</div>
+            <div class="card-value">₹ {{ total_service_revenue }}</div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="card border-info shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title"><strong>Revenue By Lathe</strong></h5>
-                    <p class="card-text text-primary">₹ {{ machining_revenue }}</p>
-                </div>
-            </div>
+
+        <div class="insight-card card-cyan fade-up delay-2">
+            <div class="card-stripe"></div>
+            <div class="card-icon"><i class="bi bi-gear"></i></div>
+            <div class="card-label">Lathe Revenue</div>
+            <div class="card-value">₹ {{ machining_revenue }}</div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="card border-info shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title"><strong>Revenue By Workshop</strong></h5>
-                    <p class="card-text text-primary">₹ {{ workshop_revenue }}</p>
-                </div>
-            </div>
+
+        <div class="insight-card card-amber fade-up delay-3">
+            <div class="card-stripe"></div>
+            <div class="card-icon"><i class="bi bi-tools"></i></div>
+            <div class="card-label">Workshop Revenue</div>
+            <div class="card-value">₹ {{ workshop_revenue }}</div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="card border-info shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title"><strong>Amount of Item Sold</strong></h5>
-                    <p class="card-text text-primary">₹ {{ total_item_revenue }}</p>
-                </div>
-            </div>
+
+        <div class="insight-card card-emerald fade-up delay-4">
+            <div class="card-stripe"></div>
+            <div class="card-icon"><i class="bi bi-box-seam"></i></div>
+            <div class="card-label">Items Sold</div>
+            <div class="card-value">₹ {{ total_item_revenue }}</div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="card border-info shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title"><strong>Profit By Item</strong></h5>
-                    <p class="card-text text-primary">₹ {{ total_profit_by_item }}</p>
-                </div>
-            </div>
+
+        <div class="insight-card card-violet fade-up delay-5">
+            <div class="card-stripe"></div>
+            <div class="card-icon"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="card-label">Item Profit</div>
+            <div class="card-value">₹ {{ total_profit_by_item }}</div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="card border-info shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title"><strong>Amount of Item Purchased</strong></h5>
-                    <p class="card-text text-primary">₹ {{ item_purchased }}</p>
-                </div>
-            </div>
+
+        <div class="insight-card card-orange fade-up delay-6">
+            <div class="card-stripe"></div>
+            <div class="card-icon"><i class="bi bi-cart3"></i></div>
+            <div class="card-label">Items Purchased</div>
+            <div class="card-value">₹ {{ item_purchased }}</div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="card border-info shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title"><strong>Total Revenue</strong></h5>
-                    <p class="card-text text-primary">₹ {{ total_revenue }}</p>
-                </div>
-            </div>
+
+        <div class="insight-card card-teal fade-up delay-7">
+            <div class="card-stripe"></div>
+            <div class="card-icon"><i class="bi bi-cash-stack"></i></div>
+            <div class="card-label">Total Revenue</div>
+            <div class="card-value">₹ {{ total_revenue }}</div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-            <div class="card border-info shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title"><strong>Total Expense</strong></h5>
-                    <p class="card-text text-primary">₹ {{ total_expense }}</p>
-                </div>
-            </div>
+
+        <div class="insight-card card-rose fade-up delay-8">
+            <div class="card-stripe"></div>
+            <div class="card-icon"><i class="bi bi-receipt-cutoff"></i></div>
+            <div class="card-label">Total Expense</div>
+            <div class="card-value">₹ {{ total_expense }}</div>
         </div>
+
     </div>
 </div>
 
 <script>
-    function setDateRange() {
-        const startDate = document.getElementById('start-date').value;
-        const endDate = document.getElementById('end-date').value;
-        const url = new URL(window.location.href);
-        url.searchParams.set('start_date', startDate);
-        url.searchParams.set('end_date', endDate);
-        window.location.href = url.href;
-        return false;  // Prevent form submission
-    }
+function setDateRange() {
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    const url = new URL(window.location.href);
+    url.searchParams.set('start_date', startDate);
+    url.searchParams.set('end_date', endDate);
+    window.location.href = url.href;
+    return false;
+}
 </script>
 {% endblock %}

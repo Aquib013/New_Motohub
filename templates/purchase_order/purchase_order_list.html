@@ -25,6 +25,7 @@
             <table class="table table-hover">
               <thead class="table-secondary">
                 <tr>
+                    <th>Sn no.</th>
                     <th>Order Number</th>
                     <th>Vendor</th>
                     <th>PO Date</th>
@@ -35,6 +36,7 @@
               <tbody>
                 {% for order in purchase_orders %}
                 <tr>
+                    <td>{{ forloop.counter }}</td>
                     <td>{{ order.po_number }}</td>
                     <td>{{ order.vendor.firm_name }}</td>
                     <td>{{ order.created_at.date }}</td>

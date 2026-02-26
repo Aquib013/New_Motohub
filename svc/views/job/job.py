@@ -112,22 +112,13 @@ class JobListView(ListView):
     model = Job
     template_name = "job/jobs.html"
     context_object_name = "jobs"
-    ordering = ['-created_at']
 
     def get_queryset(self):
         selected_date = self.request.GET.get('date')
         if selected_date:
-            queryset = Job.objects.filter(created_at__date=selected_date)
+            queryset = Job.objects.filter(job_date=selected_date)
         else:
-            # Default to today's jobs
-            queryset = Job.objects.filter(created_at__date=timezone.now().date())
-
-        # Subquery to get the first vehicle for each job
-        # vehicle_subquery = Service.objects.filter(job=OuterRef('pk')).order_by('id').values('vehicle__name')[:1]
-        #
-        # # Annotate the queryset with the vehicle name
-        # queryset = queryset.annotate(vehicle_name=Subquery(vehicle_subquery))
-
+            queryset = Job.objects.filter(job_date=timezone.now().date())
         return queryset.order_by('job_no')
 
     def get_context_data(self, **kwargs):
