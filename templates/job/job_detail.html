@@ -4,32 +4,28 @@
 
 {% block extra_css %}
 <style>
-    /* ── Inline item add ── */
-    .add-item-section {
+    /* ── Inline add sections ── */
+    .add-section {
         background: var(--bg-dark);
         border: 1px solid var(--border-subtle);
         border-radius: 10px;
         padding: 16px;
         margin-bottom: 24px;
     }
-    .add-item-section h5 {
+    .add-section h5 {
         font-family: 'Rajdhani', sans-serif;
         font-weight: 700;
         margin-bottom: 12px;
         color: var(--accent);
     }
 
-    .item-search-wrap {
-        position: relative;
-    }
-    #item-search {
-        width: 100%;
-    }
+    /* ── Item search ── */
+    .item-search-wrap { position: relative; }
+    #item-search { width: 100%; }
     .search-results {
         position: absolute;
         top: 100%;
-        left: 0;
-        right: 0;
+        left: 0; right: 0;
         max-height: 220px;
         overflow-y: auto;
         background: var(--bg-card);
@@ -48,27 +44,16 @@
         align-items: center;
         transition: background 0.15s;
     }
-    .search-item:hover {
-        background: rgba(245, 158, 11, 0.1);
-    }
-    .search-item .item-name {
-        font-weight: 500;
-        color: var(--text-primary);
-    }
-    .search-item .item-meta {
-        font-size: 11px;
-        color: var(--text-muted);
-    }
+    .search-item:hover { background: rgba(245, 158, 11, 0.1); }
+    .search-item .item-name { font-weight: 500; color: var(--text-primary); }
+    .search-item .item-meta { font-size: 11px; color: var(--text-muted); }
     .search-item .item-stock {
-        font-size: 11px;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-weight: 600;
+        font-size: 11px; padding: 2px 8px;
+        border-radius: 4px; font-weight: 600;
     }
     .stock-ok { background: rgba(34,197,94,0.15); color: #86efac; }
     .stock-low { background: rgba(239,68,68,0.15); color: #fca5a5; }
 
-    /* Selected item info */
     .selected-item-bar {
         background: rgba(245, 158, 11, 0.08);
         border: 1px solid rgba(245, 158, 11, 0.2);
@@ -77,17 +62,10 @@
         margin-top: 10px;
         display: none;
     }
-    .selected-item-bar .sel-name {
-        font-weight: 600;
-        color: var(--accent);
-    }
-    .selected-item-bar .sel-meta {
-        font-size: 12px;
-        color: var(--text-muted);
-        margin-top: 2px;
-    }
+    .selected-item-bar .sel-name { font-weight: 600; color: var(--accent); }
+    .selected-item-bar .sel-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-    /* Inline form row */
+    /* ── Inline form rows ── */
     .inline-fields {
         display: flex;
         gap: 10px;
@@ -107,10 +85,10 @@
         letter-spacing: 0.5px;
         color: var(--text-muted);
     }
-    .inline-fields input {
-        width: 120px;
+    .inline-fields input, .inline-fields select {
+        width: 140px;
     }
-    .inline-fields .btn-add-item {
+    .inline-fields .btn-add {
         background: var(--accent);
         color: var(--bg-dark);
         border: none;
@@ -122,11 +100,9 @@
         transition: all 0.2s;
         height: 38px;
     }
-    .inline-fields .btn-add-item:hover {
-        background: var(--accent-hover);
-    }
+    .inline-fields .btn-add:hover { background: var(--accent-hover); }
 
-    /* Mode toggle */
+    /* ── Mode toggle ── */
     .mode-toggle {
         display: flex;
         gap: 8px;
@@ -148,7 +124,35 @@
         color: #fcd34d;
     }
 
-    /* Toast notification */
+    /* ── Service type tabs ── */
+    .svc-type-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .svc-type-tabs .svc-tab {
+        padding: 6px 16px;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: transparent;
+        color: #aaa;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .svc-type-tabs .svc-tab.active {
+        background: rgba(245, 158, 11, 0.15);
+        border-color: rgba(245, 158, 11, 0.4);
+        color: #fcd34d;
+    }
+
+    /* Custom desc field */
+    #svc-custom-desc {
+        display: none;
+        margin-top: 8px;
+    }
+
+    /* ── Toast ── */
     .toast-msg {
         position: fixed;
         top: 20px;
@@ -169,8 +173,7 @@
     .toast-success { background: #059669; color: #fff; }
     .toast-error { background: #dc2626; color: #fff; }
 
-    /* Delete btn in table */
-    .btn-delete-item {
+    .btn-delete-row {
         background: rgba(239,68,68,0.15);
         color: #ef4444;
         border: none;
@@ -179,9 +182,7 @@
         font-size: 12px;
         cursor: pointer;
     }
-    .btn-delete-item:hover {
-        background: rgba(239,68,68,0.3);
-    }
+    .btn-delete-row:hover { background: rgba(239,68,68,0.3); }
 </style>
 {% endblock %}
 
@@ -209,11 +210,47 @@
         </div>
     </div>
 
+    <!-- ═══════════ SERVICES ═══════════ -->
     <h2 class="mb-3">Services</h2>
+
+    <!-- Inline Add Service -->
+    <div class="add-section">
+        <h5>➕ Add Service</h5>
+
+        <div class="svc-type-tabs">
+            <button class="svc-tab active" onclick="setSvcType('Machining', this)">Machining</button>
+            <button class="svc-tab" onclick="setSvcType('Workshop', this)">Workshop</button>
+        </div>
+
+        <div class="field-group mb-2">
+            <label>Description</label>
+            <select id="svc-description" class="form-control" onchange="onSvcDescChange()">
+                <option value="">-- Select --</option>
+            </select>
+        </div>
+
+        <div id="svc-custom-desc">
+            <input type="text" id="svc-custom-desc-input" class="form-control" placeholder="Enter custom description...">
+        </div>
+
+        <div class="inline-fields">
+            <div class="field-group">
+                <label>Qty</label>
+                <input type="number" id="svc-qty" class="form-control" value="1" min="1">
+            </div>
+            <div class="field-group">
+                <label>Unit Cost</label>
+                <input type="number" id="svc-unit-cost" class="form-control" placeholder="₹">
+            </div>
+            <button class="btn-add" onclick="addService()">Add</button>
+        </div>
+    </div>
+
+    <!-- Services Table -->
     {% if services %}
-        <div class="card mb-4">
+        <div class="card mb-4 mt-4" id="services-card">
             <div class="card-body">
-                <h5 class="card-title">Total Service Cost: Rs.{{ job.total_service_cost|floatformat:2 }}</h5>
+                <h5 class="card-title">Total Service Cost: Rs.<span id="total-service-cost">{{ job.total_service_cost|floatformat:2 }}</span></h5>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead class="table-dark">
@@ -226,9 +263,9 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="services-tbody">
                             {% for service in services %}
-                                <tr>
+                                <tr id="svc-row-{{ service.pk }}">
                                     <td>
                                         {% if service.description == "Others" %}
                                             {{ service.custom_description }}
@@ -243,7 +280,7 @@
                                     <td>
                                         <div class="btn-group gap-2" role="group">
                                             <a href="{% url 'edit_service' service.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                                            <a href="{% url 'delete_service' service.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                                            <button class="btn-delete-row" onclick="deleteService({{ service.pk }})">Delete</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -254,14 +291,34 @@
             </div>
         </div>
     {% else %}
-        <p class="alert alert-info">No services added</p>
+        <div id="no-services-msg" class="alert alert-info mt-4">No services added</div>
+        <div class="card mb-4 mt-4" id="services-card-new" style="display: none;">
+            <div class="card-body">
+                <h5 class="card-title">Total Service Cost: Rs.<span id="total-service-cost-new">0.00</span></h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Description</th>
+                                <th>Service Type</th>
+                                <th class="text-center">Quantity</th>
+                                <th>Unit Cost</th>
+                                <th>Total Cost</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="services-tbody-new"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     {% endif %}
-    <a href="{% url 'add_service' job.pk %}" class="btn btn-primary mb-4">Add Service</a>
 
+    <!-- ═══════════ ITEMS ═══════════ -->
     <h2 class="mb-3">Items</h2>
 
-    <!-- Inline Add Item Section -->
-    <div class="add-item-section mb-3">
+    <!-- Inline Add Item -->
+    <div class="add-section">
         <h5>➕ Add Item</h5>
 
         <div class="mode-toggle">
@@ -269,7 +326,6 @@
             <button class="toggle-btn" onclick="setItemMode('custom')">Miscellaneous</button>
         </div>
 
-        <!-- Inventory mode -->
         <div id="inventory-mode">
             <div class="item-search-wrap">
                 <input type="text" id="item-search" class="form-control" placeholder="Search item by name..." autocomplete="off">
@@ -285,7 +341,6 @@
             </div>
         </div>
 
-        <!-- Custom mode -->
         <div id="custom-mode" style="display: none;">
             <input type="text" id="custom-item-name" class="form-control" placeholder="Enter item name...">
         </div>
@@ -303,12 +358,13 @@
                 <label>Unit Price</label>
                 <input type="number" id="add-price" class="form-control" placeholder="₹">
             </div>
-            <button class="btn-add-item" onclick="addItem()">Add</button>
+            <button class="btn-add" onclick="addItem()">Add</button>
         </div>
+    </div>
 
     <!-- Items Table -->
     {% if job.jobitem_set.exists %}
-        <div class="card mb-4 mt-4">
+        <div class="card mb-4 mt-4" id="items-card">
             <div class="card-body">
                 <h5 class="card-title">Total Item Cost: Rs.<span id="total-item-cost">{{ job.total_item_cost|floatformat:2 }}</span></h5>
                 <div class="table-responsive">
@@ -332,7 +388,7 @@
                                     <td>
                                         <div class="btn-group gap-2" role="group">
                                             <a href="{% url 'edit-job-item' job_item.id %}" class="btn btn-sm btn-warning">Edit</a>
-                                            <button class="btn-delete-item" onclick="deleteItem({{ job_item.id }})">Delete</button>
+                                            <button class="btn-delete-row" onclick="deleteItem({{ job_item.id }})">Delete</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -343,8 +399,8 @@
             </div>
         </div>
     {% else %}
-        <div id="no-items-msg" class="alert alert-info">No items added</div>
-        <div class="card mb-4 mt-4" id="items-card" style="display: none;">
+        <div id="no-items-msg" class="alert alert-info mt-4">No items added</div>
+        <div class="card mb-4 mt-4" id="items-card-new" style="display: none;">
             <div class="card-body">
                 <h5 class="card-title">Total Item Cost: Rs.<span id="total-item-cost-new">0.00</span></h5>
                 <div class="table-responsive">
@@ -377,20 +433,154 @@
 
 {% block extra_js %}
 <script>
+    const jobId = {{ job.pk }};
+
+    // ═══════════ SERVICE DESCRIPTIONS ═══════════
+    const machiningChoices = [
+        "Block Boring", "Valve Grinding", "Crank Repairing",
+        "Head Seat Cutting", "Head Repairing", "Guide Fitting",
+        "Plug Socket Threading", "Housing Fitting", "Others"
+    ];
+    const workshopChoices = [
+        "Full Servicing", "Clutch Plate Replacement", "Timing Chain Replacement",
+        "Chain Sprocket Replacement", "Lock Set Replacement", "Front Fork Repairing",
+        "Disc Repairing", "Front Shocker Repairing", "Welding", "Washing",
+        "Battery Charging", "Self Repairing", "Half Engine Repairing",
+        "Full Engine Repairing", "Miscellaneous Service Charge", "Others"
+    ];
+
+    let currentSvcType = 'Machining';
+
+    function setSvcType(type, btn) {
+        currentSvcType = type;
+        document.querySelectorAll('.svc-type-tabs .svc-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        populateDescriptions();
+    }
+
+    function populateDescriptions() {
+        const sel = document.getElementById('svc-description');
+        const choices = currentSvcType === 'Machining' ? machiningChoices : workshopChoices;
+        sel.innerHTML = '<option value="">-- Select --</option>';
+        choices.forEach(c => {
+            sel.innerHTML += `<option value="${c}">${c}</option>`;
+        });
+        document.getElementById('svc-custom-desc').style.display = 'none';
+        document.getElementById('svc-custom-desc-input').value = '';
+    }
+
+    function onSvcDescChange() {
+        const val = document.getElementById('svc-description').value;
+        document.getElementById('svc-custom-desc').style.display = val === 'Others' ? 'block' : 'none';
+    }
+
+    // Initialize descriptions
+    populateDescriptions();
+
+    function addService() {
+        const description = document.getElementById('svc-description').value;
+        const customDesc = document.getElementById('svc-custom-desc-input').value.trim();
+        const qty = parseInt(document.getElementById('svc-qty').value);
+        const unitCost = parseFloat(document.getElementById('svc-unit-cost').value);
+
+        if (!description) { showToast('Select a description', 'error'); return; }
+        if (description === 'Others' && !customDesc) { showToast('Enter custom description', 'error'); return; }
+        if (!qty || qty < 1) { showToast('Enter valid quantity', 'error'); return; }
+        if (!unitCost || unitCost <= 0) { showToast('Enter valid cost', 'error'); return; }
+
+        const body = {
+            service_type: currentSvcType,
+            description: description,
+            custom_description: customDesc,
+            quantity: qty,
+            unit_service_cost: unitCost,
+        };
+
+        fetch(`/api/job/${jobId}/add-service/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify(body)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) { showToast(data.error, 'error'); return; }
+
+            const svc = data.service;
+            const newRow = `
+                <tr id="svc-row-${svc.id}">
+                    <td>${svc.description}</td>
+                    <td>${svc.service_type}</td>
+                    <td class="text-center">${svc.quantity}</td>
+                    <td>₹${parseFloat(svc.unit_service_cost).toFixed(2)}</td>
+                    <td>₹${parseFloat(svc.service_cost).toFixed(2)}</td>
+                    <td>
+                        <div class="btn-group gap-2" role="group">
+                            <a href="/service/${svc.id}/edit/" class="btn btn-sm btn-warning">Edit</a>
+                            <button class="btn-delete-row" onclick="deleteService(${svc.id})">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            const noSvcMsg = document.getElementById('no-services-msg');
+            const svcCard = document.getElementById('services-card-new');
+            if (noSvcMsg) noSvcMsg.style.display = 'none';
+            if (svcCard) svcCard.style.display = 'block';
+
+            const tbody = document.getElementById('services-tbody') || document.getElementById('services-tbody-new');
+            tbody.insertAdjacentHTML('beforeend', newRow);
+
+            updateServiceTotals(data.job_total_service_cost, data.job_amount);
+            resetServiceForm();
+            showToast('Service added successfully', 'success');
+        });
+    }
+
+    function deleteService(svcId) {
+        if (!confirm('Delete this service?')) return;
+
+        fetch(`/api/service/${svcId}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) { showToast(data.error, 'error'); return; }
+            document.getElementById(`svc-row-${svcId}`).remove();
+            updateServiceTotals(data.job_total_service_cost, data.job_amount);
+            showToast('Service deleted', 'success');
+        });
+    }
+
+    function updateServiceTotals(svcCost, jobAmount) {
+        const el1 = document.getElementById('total-service-cost');
+        const el2 = document.getElementById('total-service-cost-new');
+        if (el1) el1.textContent = parseFloat(svcCost).toFixed(2);
+        if (el2) el2.textContent = parseFloat(svcCost).toFixed(2);
+        document.getElementById('job-amount').textContent = parseFloat(jobAmount).toFixed(2);
+    }
+
+    function resetServiceForm() {
+        document.getElementById('svc-description').value = '';
+        document.getElementById('svc-custom-desc-input').value = '';
+        document.getElementById('svc-custom-desc').style.display = 'none';
+        document.getElementById('svc-qty').value = '1';
+        document.getElementById('svc-unit-cost').value = '';
+    }
+
+    // ═══════════ ITEMS ═══════════
     let selectedItemId = null;
     let selectedItemMRP = 0;
     let currentMode = 'inventory';
-    const jobId = {{ job.pk }};
 
-    // Search items
     document.getElementById('item-search').addEventListener('input', function() {
         const query = this.value;
         const resultsDiv = document.getElementById('search-results');
 
-        if (query.length < 2) {
-            resultsDiv.style.display = 'none';
-            return;
-        }
+        if (query.length < 2) { resultsDiv.style.display = 'none'; return; }
 
         fetch(`{% url 'search_items' %}?q=${encodeURIComponent(query)}`)
             .then(r => r.json())
@@ -416,7 +606,6 @@
             });
     });
 
-    // Hide results on click outside
     document.addEventListener('click', function(e) {
         const search = document.getElementById('item-search');
         const results = document.getElementById('search-results');
@@ -435,7 +624,6 @@
         document.getElementById('sel-cost').textContent = cost;
         document.getElementById('sel-stock').textContent = stock;
         document.getElementById('selected-item-bar').style.display = 'block';
-        // Reset price fields
         document.getElementById('add-discount').value = '';
         document.getElementById('add-price').value = '';
     }
@@ -461,7 +649,6 @@
         }
     }
 
-    // Auto-calculate price from discount
     document.getElementById('add-discount').addEventListener('input', function() {
         const discount = parseFloat(this.value);
         if (!isNaN(discount) && selectedItemMRP > 0) {
@@ -503,10 +690,7 @@
         })
         .then(r => r.json())
         .then(data => {
-            if (data.error) {
-                showToast(data.error, 'error');
-                return;
-            }
+            if (data.error) { showToast(data.error, 'error'); return; }
 
             const item = data.job_item;
             const newRow = `
@@ -518,22 +702,22 @@
                     <td>
                         <div class="btn-group gap-2" role="group">
                             <a href="/job/item/${item.id}/edit/" class="btn btn-sm btn-warning">Edit</a>
-                            <button class="btn-delete-item" onclick="deleteItem(${item.id})">Delete</button>
+                            <button class="btn-delete-row" onclick="deleteItem(${item.id})">Delete</button>
                         </div>
                     </td>
                 </tr>
             `;
 
             const noItemsMsg = document.getElementById('no-items-msg');
-            const itemsCard = document.getElementById('items-card');
+            const itemsCard = document.getElementById('items-card-new');
             if (noItemsMsg) noItemsMsg.style.display = 'none';
             if (itemsCard) itemsCard.style.display = 'block';
 
             const tbody = document.getElementById('items-tbody') || document.getElementById('items-tbody-new');
             tbody.insertAdjacentHTML('beforeend', newRow);
 
-            updateTotals(data.job_total_item_cost, data.job_amount);
-            resetAddForm();
+            updateItemTotals(data.job_total_item_cost, data.job_amount);
+            resetItemForm();
             showToast('Item added successfully', 'success');
         });
     }
@@ -549,12 +733,12 @@
         .then(data => {
             if (data.error) { showToast(data.error, 'error'); return; }
             document.getElementById(`item-row-${itemId}`).remove();
-            updateTotals(data.job_total_item_cost, data.job_amount);
+            updateItemTotals(data.job_total_item_cost, data.job_amount);
             showToast('Item deleted', 'success');
         });
     }
 
-    function updateTotals(itemCost, jobAmount) {
+    function updateItemTotals(itemCost, jobAmount) {
         const el1 = document.getElementById('total-item-cost');
         const el2 = document.getElementById('total-item-cost-new');
         if (el1) el1.textContent = parseFloat(itemCost).toFixed(2);
@@ -562,7 +746,7 @@
         document.getElementById('job-amount').textContent = parseFloat(jobAmount).toFixed(2);
     }
 
-    function resetAddForm() {
+    function resetItemForm() {
         document.getElementById('item-search').value = '';
         document.getElementById('custom-item-name').value = '';
         document.getElementById('add-qty').value = '1';
@@ -572,6 +756,7 @@
         selectedItemId = null;
     }
 
+    // ═══════════ SHARED ═══════════
     function showToast(msg, type) {
         const toast = document.createElement('div');
         toast.className = `toast-msg toast-${type}`;

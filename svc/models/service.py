@@ -75,7 +75,7 @@ class Service(BaseModel):
 
     def __str__(self):
         description = self.get_display_description()
-        return f"{self.job_no}- {description}"
+        return f"{self.job_no}- {description}"   # NOQA
 
 
 @receiver(post_save, sender=Service)
