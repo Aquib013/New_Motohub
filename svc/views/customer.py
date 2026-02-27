@@ -104,3 +104,5 @@ class CustomerJobDetailView(DetailView):
         context['services'] = self.object.service_set.all()
         context['items'] = self.object.jobitem_set.all()
         return context
+
+

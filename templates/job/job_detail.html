@@ -1,6 +1,190 @@
 {% extends "base.html" %}
 {% load custom_tags %}
 {% block title %}Job Detail - MotoHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Inline item add ── */
+    .add-item-section {
+        background: var(--bg-dark);
+        border: 1px solid var(--border-subtle);
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+    .add-item-section h5 {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--accent);
+    }
+
+    .item-search-wrap {
+        position: relative;
+    }
+    #item-search {
+        width: 100%;
+    }
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 220px;
+        overflow-y: auto;
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        z-index: 100;
+        display: none;
+    }
+    .search-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.15s;
+    }
+    .search-item:hover {
+        background: rgba(245, 158, 11, 0.1);
+    }
+    .search-item .item-name {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    .search-item .item-meta {
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+    .search-item .item-stock {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .stock-ok { background: rgba(34,197,94,0.15); color: #86efac; }
+    .stock-low { background: rgba(239,68,68,0.15); color: #fca5a5; }
+
+    /* Selected item info */
+    .selected-item-bar {
+        background: rgba(245, 158, 11, 0.08);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-top: 10px;
+        display: none;
+    }
+    .selected-item-bar .sel-name {
+        font-weight: 600;
+        color: var(--accent);
+    }
+    .selected-item-bar .sel-meta {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    /* Inline form row */
+    .inline-fields {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+        margin-bottom: 20px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+    .inline-fields .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .inline-fields label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+    }
+    .inline-fields input {
+        width: 120px;
+    }
+    .inline-fields .btn-add-item {
+        background: var(--accent);
+        color: var(--bg-dark);
+        border: none;
+        padding: 7px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        height: 38px;
+    }
+    .inline-fields .btn-add-item:hover {
+        background: var(--accent-hover);
+    }
+
+    /* Mode toggle */
+    .mode-toggle {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .mode-toggle .toggle-btn {
+        padding: 5px 14px;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: transparent;
+        color: #aaa;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .mode-toggle .toggle-btn.active {
+        background: rgba(245, 158, 11, 0.15);
+        border-color: rgba(245, 158, 11, 0.4);
+        color: #fcd34d;
+    }
+
+    /* Toast notification */
+    .toast-msg {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-10px);
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        z-index: 9999;
+        opacity: 0;
+        transition: all 0.3s;
+    }
+    .toast-msg.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    .toast-success { background: #059669; color: #fff; }
+    .toast-error { background: #dc2626; color: #fff; }
+
+    /* Delete btn in table */
+    .btn-delete-item {
+        background: rgba(239,68,68,0.15);
+        color: #ef4444;
+        border: none;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .btn-delete-item:hover {
+        background: rgba(239,68,68,0.3);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4">Job Details</h1>
@@ -14,13 +198,12 @@
                     {% if job.status == "Completed" %}
                         <p><strong>Completion Time:</strong> {{ job.job_completion_time|date:"d M Y, H:i" }}</p>
                     {% endif %}
-                    <p><strong>Job Amount:</strong> Rs.{{ job.job_amount|floatformat:2 }}</p>
+                    <p><strong>Job Amount:</strong> Rs.<span id="job-amount">{{ job.job_amount|floatformat:2 }}</span></p>
                 </div>
                 <div class="col-md-6">
-
-                <p><strong>Vehicle:</strong> {{ job.vehicle.name }}</p>
-                <p><strong>Registration No.:</strong> {{ job.license_plate }}</p>
-                <p><strong>Mileage:</strong>{{ job.total_run }} Kms</p>
+                    <p><strong>Vehicle:</strong> {{ job.vehicle.name }}</p>
+                    <p><strong>Registration No.:</strong> {{ job.license_plate }}</p>
+                    <p><strong>Mileage:</strong> {{ job.total_run }} Kms</p>
                 </div>
             </div>
         </div>
@@ -76,10 +259,58 @@
     <a href="{% url 'add_service' job.pk %}" class="btn btn-primary mb-4">Add Service</a>
 
     <h2 class="mb-3">Items</h2>
+
+    <!-- Inline Add Item Section -->
+    <div class="add-item-section mb-3">
+        <h5>➕ Add Item</h5>
+
+        <div class="mode-toggle">
+            <button class="toggle-btn active" onclick="setItemMode('inventory')">From Inventory</button>
+            <button class="toggle-btn" onclick="setItemMode('custom')">Miscellaneous</button>
+        </div>
+
+        <!-- Inventory mode -->
+        <div id="inventory-mode">
+            <div class="item-search-wrap">
+                <input type="text" id="item-search" class="form-control" placeholder="Search item by name..." autocomplete="off">
+                <div class="search-results" id="search-results"></div>
+            </div>
+            <div class="selected-item-bar" id="selected-item-bar">
+                <div class="sel-name" id="sel-name"></div>
+                <div class="sel-meta">
+                    MRP: ₹<span id="sel-mrp">0</span> &nbsp;|&nbsp;
+                    Cost: ₹<span id="sel-cost">0</span> &nbsp;|&nbsp;
+                    Stock: <span id="sel-stock">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom mode -->
+        <div id="custom-mode" style="display: none;">
+            <input type="text" id="custom-item-name" class="form-control" placeholder="Enter item name...">
+        </div>
+
+        <div class="inline-fields">
+            <div class="field-group">
+                <label>Qty</label>
+                <input type="number" id="add-qty" class="form-control" value="1" min="1">
+            </div>
+            <div class="field-group" id="discount-group">
+                <label>Discount %</label>
+                <input type="number" id="add-discount" class="form-control" placeholder="%" step="0.01">
+            </div>
+            <div class="field-group">
+                <label>Unit Price</label>
+                <input type="number" id="add-price" class="form-control" placeholder="₹">
+            </div>
+            <button class="btn-add-item" onclick="addItem()">Add</button>
+        </div>
+
+    <!-- Items Table -->
     {% if job.jobitem_set.exists %}
-        <div class="card mb-4">
+        <div class="card mb-4 mt-4">
             <div class="card-body">
-                <h5 class="card-title">Total Item Cost: Rs.{{ job.total_item_cost|floatformat:2 }}</h5>
+                <h5 class="card-title">Total Item Cost: Rs.<span id="total-item-cost">{{ job.total_item_cost|floatformat:2 }}</span></h5>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead class="table-dark">
@@ -91,9 +322,9 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="items-tbody">
                             {% for job_item in job.jobitem_set.all %}
-                                <tr>
+                                <tr id="item-row-{{ job_item.id }}">
                                     <td>{{ job_item.display_name }}</td>
                                     <td class="text-center">{{ job_item.item_quantity }}</td>
                                     <td>₹{{ job_item.item_unit_price|floatformat:2 }}</td>
@@ -101,7 +332,7 @@
                                     <td>
                                         <div class="btn-group gap-2" role="group">
                                             <a href="{% url 'edit-job-item' job_item.id %}" class="btn btn-sm btn-warning">Edit</a>
-                                            <a href="{% url 'delete-job-item' job_item.id %}" class="btn btn-sm btn-danger">Delete</a>
+                                            <button class="btn-delete-item" onclick="deleteItem({{ job_item.id }})">Delete</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -112,9 +343,27 @@
             </div>
         </div>
     {% else %}
-        <p class="alert alert-info">No items added</p>
+        <div id="no-items-msg" class="alert alert-info">No items added</div>
+        <div class="card mb-4 mt-4" id="items-card" style="display: none;">
+            <div class="card-body">
+                <h5 class="card-title">Total Item Cost: Rs.<span id="total-item-cost-new">0.00</span></h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Item Name</th>
+                                <th class="text-center">Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-tbody-new"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     {% endif %}
-    <a href="{% url 'add-job-item' job.pk %}" class="btn btn-primary mb-4">Add Item</a>
 
     <div class="d-flex justify-content-between mb-4">
         <div>
@@ -124,4 +373,225 @@
         <a href="{% url 'generate_invoice' job.id %}" class="btn btn-success">Download Invoice</a>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedItemId = null;
+    let selectedItemMRP = 0;
+    let currentMode = 'inventory';
+    const jobId = {{ job.pk }};
+
+    // Search items
+    document.getElementById('item-search').addEventListener('input', function() {
+        const query = this.value;
+        const resultsDiv = document.getElementById('search-results');
+
+        if (query.length < 2) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
+
+        fetch(`{% url 'search_items' %}?q=${encodeURIComponent(query)}`)
+            .then(r => r.json())
+            .then(items => {
+                resultsDiv.innerHTML = '';
+                if (items.length === 0) {
+                    resultsDiv.innerHTML = '<div class="search-item"><span class="item-name" style="color: var(--text-muted);">No items found</span></div>';
+                } else {
+                    items.forEach(item => {
+                        const stockClass = item.stock > 0 ? 'stock-ok' : 'stock-low';
+                        resultsDiv.innerHTML += `
+                            <div class="search-item" onclick="selectItem(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.mrp}, ${item.cost_price}, ${item.stock})">
+                                <div>
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-meta">MRP: ₹${item.mrp} | Cost: ₹${item.cost_price}</div>
+                                </div>
+                                <span class="item-stock ${stockClass}">${item.stock} in stock</span>
+                            </div>
+                        `;
+                    });
+                }
+                resultsDiv.style.display = 'block';
+            });
+    });
+
+    // Hide results on click outside
+    document.addEventListener('click', function(e) {
+        const search = document.getElementById('item-search');
+        const results = document.getElementById('search-results');
+        if (!search.contains(e.target) && !results.contains(e.target)) {
+            results.style.display = 'none';
+        }
+    });
+
+    function selectItem(id, name, mrp, cost, stock) {
+        selectedItemId = id;
+        selectedItemMRP = mrp;
+        document.getElementById('item-search').value = name;
+        document.getElementById('search-results').style.display = 'none';
+        document.getElementById('sel-name').textContent = name;
+        document.getElementById('sel-mrp').textContent = mrp;
+        document.getElementById('sel-cost').textContent = cost;
+        document.getElementById('sel-stock').textContent = stock;
+        document.getElementById('selected-item-bar').style.display = 'block';
+        // Reset price fields
+        document.getElementById('add-discount').value = '';
+        document.getElementById('add-price').value = '';
+    }
+
+    function setItemMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.mode-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+
+        if (mode === 'inventory') {
+            document.getElementById('inventory-mode').style.display = 'block';
+            document.getElementById('custom-mode').style.display = 'none';
+            document.getElementById('discount-group').style.display = 'flex';
+            document.getElementById('add-price').value = '';
+            document.getElementById('add-discount').value = '';
+        } else {
+            document.getElementById('inventory-mode').style.display = 'none';
+            document.getElementById('custom-mode').style.display = 'block';
+            document.getElementById('discount-group').style.display = 'none';
+            document.getElementById('add-price').value = '';
+            document.getElementById('add-discount').value = '';
+            selectedItemId = null;
+        }
+    }
+
+    // Auto-calculate price from discount
+    document.getElementById('add-discount').addEventListener('input', function() {
+        const discount = parseFloat(this.value);
+        if (!isNaN(discount) && selectedItemMRP > 0) {
+            const rawPrice = selectedItemMRP - (selectedItemMRP * discount / 100);
+            const unitPrice = Math.ceil(rawPrice / 10) * 10;
+            document.getElementById('add-price').value = unitPrice;
+        } else {
+            document.getElementById('add-price').value = '';
+        }
+    });
+
+    function addItem() {
+        const qty = parseInt(document.getElementById('add-qty').value);
+        const price = parseFloat(document.getElementById('add-price').value);
+
+        if (!qty || qty < 1) { showToast('Enter a valid quantity', 'error'); return; }
+        if (!price || price <= 0) { showToast('Enter a valid price', 'error'); return; }
+
+        let body = { quantity: qty, unit_price: price };
+
+        if (currentMode === 'inventory') {
+            if (!selectedItemId) { showToast('Select an item first', 'error'); return; }
+            body.item_id = selectedItemId;
+            body.is_custom = false;
+        } else {
+            const customName = document.getElementById('custom-item-name').value.trim();
+            if (!customName) { showToast('Enter item name', 'error'); return; }
+            body.custom_item_name = customName;
+            body.is_custom = true;
+        }
+
+        fetch(`/api/job/${jobId}/add-item/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify(body)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                showToast(data.error, 'error');
+                return;
+            }
+
+            const item = data.job_item;
+            const newRow = `
+                <tr id="item-row-${item.id}">
+                    <td>${item.name}</td>
+                    <td class="text-center">${item.quantity}</td>
+                    <td>₹${parseFloat(item.unit_price).toFixed(2)}</td>
+                    <td>₹${parseFloat(item.total_price).toFixed(2)}</td>
+                    <td>
+                        <div class="btn-group gap-2" role="group">
+                            <a href="/job/item/${item.id}/edit/" class="btn btn-sm btn-warning">Edit</a>
+                            <button class="btn-delete-item" onclick="deleteItem(${item.id})">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            const noItemsMsg = document.getElementById('no-items-msg');
+            const itemsCard = document.getElementById('items-card');
+            if (noItemsMsg) noItemsMsg.style.display = 'none';
+            if (itemsCard) itemsCard.style.display = 'block';
+
+            const tbody = document.getElementById('items-tbody') || document.getElementById('items-tbody-new');
+            tbody.insertAdjacentHTML('beforeend', newRow);
+
+            updateTotals(data.job_total_item_cost, data.job_amount);
+            resetAddForm();
+            showToast('Item added successfully', 'success');
+        });
+    }
+
+    function deleteItem(itemId) {
+        if (!confirm('Delete this item?')) return;
+
+        fetch(`/api/job-item/${itemId}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) { showToast(data.error, 'error'); return; }
+            document.getElementById(`item-row-${itemId}`).remove();
+            updateTotals(data.job_total_item_cost, data.job_amount);
+            showToast('Item deleted', 'success');
+        });
+    }
+
+    function updateTotals(itemCost, jobAmount) {
+        const el1 = document.getElementById('total-item-cost');
+        const el2 = document.getElementById('total-item-cost-new');
+        if (el1) el1.textContent = parseFloat(itemCost).toFixed(2);
+        if (el2) el2.textContent = parseFloat(itemCost).toFixed(2);
+        document.getElementById('job-amount').textContent = parseFloat(jobAmount).toFixed(2);
+    }
+
+    function resetAddForm() {
+        document.getElementById('item-search').value = '';
+        document.getElementById('custom-item-name').value = '';
+        document.getElementById('add-qty').value = '1';
+        document.getElementById('add-price').value = '';
+        document.getElementById('add-discount').value = '';
+        document.getElementById('selected-item-bar').style.display = 'none';
+        selectedItemId = null;
+    }
+
+    function showToast(msg, type) {
+        const toast = document.createElement('div');
+        toast.className = `toast-msg toast-${type}`;
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function getCsrfToken() {
+        const name = 'csrftoken';
+        const cookies = document.cookie.split(';');
+        for (let c of cookies) {
+            c = c.trim();
+            if (c.startsWith(name + '=')) return decodeURIComponent(c.substring(name.length + 1));
+        }
+        return '';
+    }
+</script>
 {% endblock %}

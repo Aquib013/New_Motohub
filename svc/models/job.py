@@ -80,9 +80,14 @@ class Job(BaseModel):
 def update_customer_on_job_creation(sender, instance, created, **kwargs):
     if instance.status == 'Completed' and instance.customer is not None:
         customer = instance.customer
-        customer.last_billed_amount = instance.job_amount
-        customer.last_billed_date = instance.job_date
-        customer.save()
+        latest_job = customer.job_set.filter(
+            status='Completed'
+        ).order_by('-job_date', '-job_completion_time').first()
+
+        if latest_job:
+            customer.last_billed_amount = latest_job.job_amount
+            customer.last_billed_date = latest_job.job_date
+            customer.save()
 
 
 @receiver(post_delete, sender=Job)

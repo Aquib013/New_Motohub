@@ -25,7 +25,7 @@ class Customer(BaseModel):
         return f"{self.customer_name}"
 
     def update_dues_and_balance(self):
-        jobs = self.job_set.filter(status='Completed')  # NOQA
+        jobs = self.job_set.filter(status='Completed')
 
         job_calculations = jobs.aggregate(
             total_dues=Sum(Case(
@@ -43,7 +43,6 @@ class Customer(BaseModel):
         total_dues = (job_calculations['total_dues'] or Decimal('0.00')) + self.opening_balance
         total_balance = job_calculations['total_balance'] or Decimal('0.00')
 
-        # Offset dues against balance
         net = total_dues - total_balance
         if net > 0:
             total_dues = net
@@ -57,4 +56,14 @@ class Customer(BaseModel):
 
         self.dues = total_dues
         self.balance = total_balance
+
+        # Always recalculate last_billed from latest completed job
+        latest_job = jobs.order_by('-job_date', '-job_completion_time').first()
+        if latest_job:
+            self.last_billed_amount = latest_job.job_amount
+            self.last_billed_date = latest_job.job_date
+        else:
+            self.last_billed_amount = None
+            self.last_billed_date = None
+
         self.save()
