@@ -39,7 +39,6 @@ class Job(BaseModel):
             date = datetime.now().date()
         date_str = date.strftime("%d%m%Y")
         with transaction.atomic():
-            # Filter by job_date, not created_at
             last_job = Job.objects.filter(job_date=date).select_for_update().order_by("-id").first()
             if last_job is None:
                 counter = 1
@@ -50,17 +49,16 @@ class Job(BaseModel):
                 except (IndexError, ValueError):
                     counter = 1
 
-            # Check if this job_no already exists (safety check)
-            job_no = f"{date_str}-{counter}"
+            job_no = f"{date_str}-{counter:02d}"
             while Job.objects.filter(job_no=job_no).exists():
                 counter += 1
-                job_no = f"{date_str}-{counter}"
+                job_no = f"{date_str}-{counter:02d}"
 
             return job_no
 
     def save(self, *args, **kwargs):
         if not self.job_no:
-            self.job_no = self.unique_job_no(self.job_date)   # NOQA
+            self.job_no = self.unique_job_no(self.job_date)  # NOQA
         if self.status == 'Completed' and self.job_completion_time is None:
             self.job_completion_time = timezone.now()
         elif self.status != "Completed":
@@ -93,13 +91,13 @@ def update_customer_on_job_creation(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Job)
 def update_customer_on_job_deletion(sender, instance, **kwargs):
     if instance.customer is None:
-        return  # Exit the function if there's no customer associated with the job
+        return
 
     customer = instance.customer
     previous_job = Job.objects.filter(
         customer=customer,
         status="Completed"
-    ).exclude(id=instance.id).order_by('-job_completion_time', '-created_at').first()
+    ).exclude(id=instance.id).order_by('-job_date', '-job_completion_time').first()
 
     if previous_job:
         customer.last_billed_amount = previous_job.job_amount

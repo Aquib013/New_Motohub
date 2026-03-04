@@ -2,75 +2,450 @@
 {% block title %}Jobs - MotoHub{% endblock %}
 
 {% block content %}
+<style>
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                    <h2 class="mb-3">Jobs</h2>
-                    <a href="{% url 'create_job' %}" class="btn btn-success btn-lg">Create Job</a>
-                </div>
-                <div class="card-body">
-                    <!-- Date Filter Form -->
-                    <form method="get" class="mb-3 d-flex align-items-center">
-                        <div>
-                            <label for="date" class="me-2">Select Date:</label>
-                            <input type="date" id="date" name="date" value="{{ selected_date }}" class="form-control d-inline-block w-auto">
-                            <button type="submit" class="btn btn-primary">Filter</button>
-                        </div>
-                    </form>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-secondary">
-                            <tr>
-                                <th>Job No.</th>
-                                <th>Customer</th>
-                                <th>Vehicle</th>
-                                <th>Reg. No.</th>
-                                <th>Status</th>
-        <!--                        {% if show_completion_time %}-->
-        <!--                            <th>Completed</th>-->
-        <!--                        {% endif %}-->
-                                <th>Amount</th>
-                                <th>Paid</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for job in jobs %}
-                                <tr>
-                                    <td>{{ job.job_no }}</td>
-                                    <td>{{ job.customer.customer_name}}</td>
-                                    <td>{{ job.vehicle.name|default:"N/A" }}</td>
-                                    <td>{{ job.license_plate }}</td>
-                                    <td><span class="badge bg-{{ job.status|lower }}">{{ job.status }}</span></td>
-        <!--                            {% if show_completion_time %}-->
-        <!--                                <td>{{ job.job_completion_time }}</td>-->
-        <!--                            {% endif %}-->
-                                    <td>{{ job.job_amount|floatformat:2 }}</td>
-                                    <td>{{ job.paid_amount|floatformat:2 }}</td>
-                                    <td>
-                                        <div class="d-flex flex-wrap gap-2">
-                                            <a href="{% url 'job_detail' job.pk %}" class="btn btn-sm btn-info">Add Service</a>
-                                            <a href="{% url 'job_edit' job.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                                            <a href="{% url 'job_edit' job.pk %}" class="btn btn-sm btn-success">Add Payment</a>
-                                            <a href="{% url 'job_delete' job.pk %}" class="btn btn-sm btn-danger">Delete</a>
-                                            <a href="{% url 'generate_invoice' job.id %}" class="btn btn-sm btn-info">Invoice</a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="10" class="text-center">No Jobs found.</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+    .jobs-page { color: var(--text-primary); }
+
+    /* Page Header */
+    .jobs-header {
+        background: var(--bg-sidebar);
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 24px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .jobs-header h1 {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+        letter-spacing: 0.5px;
+    }
+    .jobs-header .header-subtitle {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+    .btn-create-job {
+        background: var(--accent);
+        color: var(--bg-dark);
+        border: none;
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-create-job:hover {
+        background: var(--accent-hover);
+        color: var(--bg-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+    }
+
+    /* Stats Strip */
+    .stats-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    .stat-card {
+        padding: 16px 24px;
+        border-right: 1px solid var(--border-subtle);
+        background: var(--bg-card);
+    }
+    .stat-card:last-child { border-right: none; }
+    .stat-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: 2px;
+    }
+    .stat-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.02em;
+    }
+    .stat-value.green { color: #22c55e; }
+    .stat-value.amber { color: var(--accent); }
+    .stat-value.red { color: #ef4444; }
+
+    /* Toolbar */
+    .jobs-toolbar {
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        background: var(--bg-card);
+    }
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .filter-group label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0;
+    }
+    .filter-group input[type="date"] {
+        background: var(--bg-dark);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        padding: 7px 12px;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 0.2s;
+        color-scheme: dark;
+    }
+    .filter-group input[type="date"]:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(245,158,11,0.15);
+    }
+    .btn-filter {
+        background: var(--accent);
+        color: var(--bg-dark);
+        border: none;
+        padding: 7px 18px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-filter:hover { background: var(--accent-hover); }
+    .btn-clear {
+        background: none;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--text-muted);
+        padding: 7px 14px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .btn-clear:hover { border-color: rgba(255,255,255,0.2); color: var(--text-primary); }
+    .search-box { position: relative; }
+    .search-box input {
+        background: var(--bg-dark);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        padding: 7px 12px 7px 34px;
+        font-size: 0.85rem;
+        width: 220px;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .search-box input::placeholder { color: #555; }
+    .search-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(245,158,11,0.15); }
+    .search-box svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+    /* Table */
+    .jobs-table-wrap { overflow-x: auto; }
+    .jobs-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+    }
+    .jobs-table thead th {
+        padding: 12px 16px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        background: var(--bg-sidebar);
+        border-bottom: 1px solid var(--border-subtle);
+        white-space: nowrap;
+        text-align: left;
+    }
+    .jobs-table thead th.text-right { text-align: right; }
+    .jobs-table thead th.text-center { text-align: center; }
+    .jobs-table tbody tr {
+        border-bottom: 1px solid var(--border-subtle);
+        transition: background 0.15s;
+    }
+    .jobs-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .jobs-table tbody td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        color: var(--text-primary);
+    }
+    .job-no {
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        font-size: 0.82rem;
+        color: var(--accent);
+    }
+    .customer-name { font-weight: 600; color: #fff; }
+    .vehicle-info { color: var(--text-muted); font-size: 0.82rem; }
+    .reg-no {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        font-size: 0.82rem;
+        background: rgba(255,255,255,0.06);
+        padding: 3px 8px;
+        border-radius: 4px;
+        display: inline-block;
+        color: var(--text-primary);
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .status-badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .status-badge.status-pending {
+        background: rgba(245,158,11,0.15);
+        color: #fbbf24;
+    }
+    .status-badge.status-pending::before { background: #fbbf24; }
+    .status-badge.status-completed, .status-badge.status-complete {
+        background: rgba(34,197,94,0.15);
+        color: #4ade80;
+    }
+    .status-badge.status-completed::before, .status-badge.status-complete::before { background: #4ade80; }
+    .status-badge.status-cancelled {
+        background: rgba(239,68,68,0.15);
+        color: #f87171;
+    }
+    .status-badge.status-cancelled::before { background: #f87171; }
+    .status-badge.status-in_progress {
+        background: rgba(59,130,246,0.15);
+        color: #60a5fa;
+    }
+    .status-badge.status-in_progress::before { background: #60a5fa; }
+
+    /* Amounts */
+    .amount { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+    .amount-paid { color: #4ade80; }
+    .amount-due { color: #f87171; font-size: 0.75rem; }
+
+    /* Action Buttons */
+    .actions-cell { text-align: center; white-space: nowrap; }
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: var(--bg-dark);
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: all 0.2s;
+        position: relative;
+    }
+    .action-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(245,158,11,0.1);
+    }
+    .action-btn.danger:hover {
+        border-color: #ef4444;
+        color: #f87171;
+        background: rgba(239,68,68,0.1);
+    }
+    .action-btn.success:hover {
+        border-color: #22c55e;
+        color: #4ade80;
+        background: rgba(34,197,94,0.1);
+    }
+    .action-btn svg { width: 15px; height: 15px; }
+    .action-btn .tip {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #000;
+        color: #fff;
+        font-size: 0.68rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s;
+        margin-bottom: 4px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .action-btn:hover .tip { opacity: 1; }
+
+    /* Empty State */
+    .empty-state { padding: 60px 20px; text-align: center; }
+    .empty-state svg { color: #444; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .empty-state p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
+
+    /* Card Wrapper */
+    .jobs-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+    }
+
+</style>
+
+
+<div class="container-fluid px-4 py-4 jobs-page">
+    <div class="jobs-card">
+        <div class="jobs-header">
+            <div>
+                <h1>Jobs</h1>
+                <div class="header-subtitle">{% if selected_date %}Showing jobs for {{ selected_date }}{% else %}All jobs overview{% endif %}</div>
             </div>
+            <a href="{% url 'create_job' %}" class="btn-create-job">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New Job
+            </a>
+        </div>
+
+        <div class="stats-strip">
+            <div class="stat-card"><div class="stat-label">Total Jobs</div><div class="stat-value">{{ jobs|length }}</div></div>
+            <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value green" id="stat-completed">0</div></div>
+            <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value amber" id="stat-pending">0</div></div>
+            <div class="stat-card"><div class="stat-label">Total Amount</div><div class="stat-value" id="stat-amount">&#x20B9;0</div></div>
+            <div class="stat-card"><div class="stat-label">Dues</div><div class="stat-value red" id="stat-dues">&#x20B9;0</div></div>
+        </div>
+
+        <form method="get" class="jobs-toolbar">
+            <div class="filter-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" value="{{ selected_date }}">
+                <button type="submit" class="btn-filter">Filter</button>
+                {% if selected_date %}<a href="{% url 'jobs' %}" class="btn-clear">Clear</a>{% endif %}
+            </div>
+            <div class="search-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="table-search" placeholder="Search jobs...">
+            </div>
+        </form>
+
+        <div class="jobs-table-wrap">
+            <table class="jobs-table" id="jobs-table">
+                <thead>
+                    <tr>
+                        <th>Job No.</th><th>Customer</th><th>Vehicle</th><th>Reg. No.</th>
+                        <th>Status</th><th class="text-right">Amount</th><th class="text-right">Paid</th><th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr data-status="{{ job.status|lower }}" data-amount="{{ job.job_amount }}" data-paid="{{ job.paid_amount }}">
+                        <td><span class="job-no">{{ job.job_no }}</span></td>
+                        <td><span class="customer-name">{{ job.customer.customer_name }}</span></td>
+                        <td><span class="vehicle-info">{{ job.vehicle.name|default:"&#8212;" }}</span></td>
+                        <td><span class="reg-no">{{ job.license_plate }}</span></td>
+                        <td><span class="status-badge status-{{ job.status|lower }}">{{ job.status }}</span></td>
+                        <td class="amount">&#x20B9;{{ job.job_amount|floatformat:2 }}</td>
+                        <td>
+                            <span class="amount amount-paid">&#x20B9;{{ job.paid_amount|floatformat:2 }}</span>
+                            {% if job.job_amount > job.paid_amount %}<div class="amount-due">Due: &#x20B9;{{ job.job_amount|floatformat:2 }}</div>{% endif %}
+                        </td>
+                        <td class="actions-cell">
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="{% url 'job_detail' job.pk %}" class="action-btn"><span class="tip">View / Add Service</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+                                <a href="{% url 'job_edit' job.pk %}" class="action-btn"><span class="tip">Edit Job</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>
+                                <a href="{% url 'job_edit' job.pk %}" class="action-btn success"><span class="tip">Add Payment</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></a>
+                                <a href="{% url 'generate_invoice' job.id %}" class="action-btn"><span class="tip">Invoice</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></a>
+                                <a href="{% url 'job_delete' job.pk %}" class="action-btn danger"><span class="tip">Delete</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                <h3>No jobs found</h3>
+                                <p>{% if selected_date %}No jobs for {{ selected_date }}. Try another date.{% else %}Get started by creating your first job.{% endif %}</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var rows = document.querySelectorAll('#jobs-table tbody tr[data-status]');
+    var completed = 0, pending = 0, totalAmount = 0, totalDues = 0;
+    var fmt = function(v) { return '\u20B9' + v.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}); };
+
+    rows.forEach(function(row) {
+        var s = row.dataset.status, a = parseFloat(row.dataset.amount)||0, p = parseFloat(row.dataset.paid)||0;
+
+        // If paid exceeds job amount, count the extra in total
+        if (p > a) {
+            totalAmount += p;
+        } else {
+            totalAmount += a;
+            totalDues += (a - p);
+        }
+
+        // Update the per-row due display
+        var dueEl = row.querySelector('.amount-due');
+        if (dueEl) {
+            if (p < a) {
+                dueEl.textContent = 'Due: ' + fmt(a - p);
+            } else {
+                dueEl.style.display = 'none';
+            }
+        }
+
+        if (s === 'completed' || s === 'complete') completed++;
+        else if (s === 'pending' || s === 'in_progress') pending++;
+    });
+
+    document.getElementById('stat-completed').textContent = completed;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-amount').textContent = fmt(totalAmount);
+    document.getElementById('stat-dues').textContent = fmt(totalDues);
+
+    var search = document.getElementById('table-search');
+    if (search) {
+        search.addEventListener('input', function() {
+            var q = this.value.toLowerCase();
+            rows.forEach(function(r) { r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+        });
+    }
+});
+</script>
 {% endblock %}
