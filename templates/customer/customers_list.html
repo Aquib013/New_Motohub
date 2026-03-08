@@ -1,156 +1,450 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load widget_tweaks %}
 {% block title %}Customers - MotoHub{% endblock %}
 
-{% block extra_css %}
-<style>
-    .nav-tabs .nav-link {
-        color: var(--text-muted);
-        border: 1px solid transparent;
-    }
-    .nav-tabs .nav-link.active {
-        color: var(--accent);
-        background-color: var(--bg-card);
-        border-color: var(--border-subtle) var(--border-subtle) var(--bg-card);
-    }
-    .nav-tabs {
-        border-bottom-color: var(--border-subtle);
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-12">
-            <div class="card shadow">
-                <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0">Customers</h2>
-                    <a href="{% url 'add-customer' %}" class="btn btn-success">
-                        <i class="fas fa-plus mr-2"></i>Add Customer
-                    </a>
-                </div>
-                <div class="card-body">
-                    <!-- Search bar -->
-                    <div class="input-group mb-3">
-                        <input type="text" id="customer-search" class="form-control" placeholder="Search by name or mobile number...">
-                    </div>
+<style>
 
-                    <ul class="nav nav-tabs mb-3" id="customerTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="mechanic-tab" data-bs-toggle="tab" data-bs-target="#mechanic" type="button" role="tab">Mechanic</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="non-mechanic-tab" data-bs-toggle="tab" data-bs-target="#non-mechanic" type="button" role="tab">Non-Mechanic</button>
-                        </li>
-                    </ul>
-                    <div class="tab-content" id="customerTabsContent">
-                        <!-- Mechanic Tab -->
-                        <div class="tab-pane fade show active" id="mechanic" role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover">
-                                    <thead class="thead-light">
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>Contact</th>
-                                        <th class="text-right">Balance</th>
-                                        <th class="text-right">Total Dues</th>
-                                        <th class="text-right">Last Billed Amount</th>
-                                        <th>Last Billed Date</th>
-                                        <th class="text-center">Actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for customer in mechanic_customers %}
-                                    <tr>
-                                        <td>{{ customer.customer_name }}</td>
-                                        <td>{{ customer.customer_type }}</td>
-                                        <td>{{ customer.customer_mob_no }}</td>
-                                        <td class="text-right">{{ customer.balance|floatformat:2 }}</td>
-                                        <td class="text-right">{{ customer.dues|floatformat:2 }}</td>
-                                        <td class="text-right">{{ customer.last_billed_amount|floatformat:2 }}</td>
-                                        <td>{{ customer.last_billed_date|date:"d M Y" }}</td>
-                                        <td>
-                                            <div class="d-flex flex-column flex-md-row justify-content-center gap-2">
-                                                <a href="{% url 'edit-customer' customer.id %}" class="btn btn-sm btn-info mb-1 mb-md-0">Edit</a>
-                                                <a href="{% url 'customer_jobs' customer.id %}" class="btn btn-sm btn-success mb-1 mb-md-0">Jobs</a>
-                                                <a href="{% url 'delete-customer' customer.id %}" class="btn btn-sm btn-danger">Delete</a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="8" class="text-center">No Mechanic customers found.</td>
-                                    </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+    .cust-page { color: var(--text-primary); }
 
-                        <!-- Non-Mechanic Tab -->
-                        <div class="tab-pane fade" id="non-mechanic" role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover">
-                                    <thead class="thead-light">
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>Contact</th>
-                                        <th class="text-right">Balance</th>
-                                        <th class="text-right">Total Dues</th>
-                                        <th class="text-right">Last Billed Amount</th>
-                                        <th>Last Billed Date</th>
-                                        <th class="text-center">Actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for customer in non_mechanic_customers %}
-                                    <tr>
-                                        <td>{{ customer.customer_name }}</td>
-                                        <td>{{ customer.customer_type }}</td>
-                                        <td>{{ customer.customer_mob_no }}</td>
-                                        <td class="text-right">{{ customer.balance|floatformat:2 }}</td>
-                                        <td class="text-right">{{ customer.dues|floatformat:2 }}</td>
-                                        <td class="text-right">{{ customer.last_billed_amount|floatformat:2 }}</td>
-                                        <td>{{ customer.last_billed_date|date:"d M Y" }}</td>
-                                        <td>
-                                            <div class="d-flex flex-column flex-md-row justify-content-center gap-2">
-                                                <a href="{% url 'edit-customer' customer.id %}" class="btn btn-sm btn-info mb-1 mb-md-0">Edit</a>
-                                                <a href="{% url 'customer_jobs' customer.id %}" class="btn btn-sm btn-success mb-1 mb-md-0">Jobs</a>
-                                                <a href="{% url 'delete-customer' customer.id %}" class="btn btn-sm btn-danger">Delete</a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="8" class="text-center">No Non-Mechanic customers found.</td>
-                                    </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    /* Header */
+    .cust-header {
+        background: var(--bg-sidebar);
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 24px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .cust-header h1 {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+    }
+    .cust-header .header-sub { font-size: 0.83rem; color: var(--text-muted); margin-top: 2px; }
+    .btn-add-cust {
+        background: var(--accent);
+        color: var(--bg-dark);
+        border: none;
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-add-cust:hover {
+        background: var(--accent-hover);
+        color: var(--bg-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+    }
+
+    /* Stats */
+    .cust-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    .cust-stat {
+        padding: 16px 24px;
+        border-right: 1px solid var(--border-subtle);
+        background: var(--bg-card);
+    }
+    .cust-stat:last-child { border-right: none; }
+    .cust-stat-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: 2px;
+    }
+    .cust-stat-val {
+        font-size: 1.45rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.02em;
+    }
+    .cust-stat-val.amber { color: var(--accent); }
+    .cust-stat-val.green { color: #4ade80; }
+    .cust-stat-val.red { color: #f87171; }
+
+    /* Toolbar */
+    .cust-toolbar {
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        background: var(--bg-card);
+    }
+    .cust-search { position: relative; flex: 1; max-width: 380px; }
+    .cust-search input {
+        background: var(--bg-dark);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        padding: 9px 14px 9px 38px;
+        font-size: 0.93rem;
+        width: 100%;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .cust-search input::placeholder { color: #555; }
+    .cust-search input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(245,158,11,0.15); }
+    .cust-search svg {
+        position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);
+    }
+
+    /* Tabs */
+    .cust-tabs {
+        display: flex;
+        gap: 0;
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 0 24px;
+    }
+    .cust-tab-btn {
+        padding: 12px 24px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        letter-spacing: 0.02em;
+    }
+    .cust-tab-btn:hover { color: var(--text-primary); }
+    .cust-tab-btn.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+    }
+    .cust-tab-btn .tab-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-left: 6px;
+        background: rgba(255,255,255,0.06);
+        color: var(--text-muted);
+    }
+    .cust-tab-btn.active .tab-count {
+        background: rgba(245,158,11,0.15);
+        color: var(--accent);
+    }
+
+    /* Table */
+    .cust-table-wrap { overflow-x: auto; }
+    .cust-panel { display: none; }
+    .cust-panel.active { display: block; }
+    .cust-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+    .cust-table thead th {
+        padding: 12px 16px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        background: var(--bg-sidebar);
+        border-bottom: 1px solid var(--border-subtle);
+        white-space: nowrap;
+        text-align: left;
+    }
+    .cust-table thead th.text-right { text-align: right; }
+    .cust-table thead th.text-center { text-align: center; }
+    .cust-table tbody tr {
+        border-bottom: 1px solid var(--border-subtle);
+        transition: background 0.15s;
+    }
+    .cust-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .cust-table tbody td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        color: var(--text-primary);
+    }
+    .cust-name { font-weight: 600; color: #fff; }
+    .cust-mob { font-size: 0.9rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .row-num {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: var(--text-muted);
+        font-variant-numeric: tabular-nums;
+        text-align: center;
+        width: 50px;
+    }
+    .money { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+    .money.positive { color: #4ade80; }
+    .money.negative { color: #f87171; }
+    .money.zero { color: var(--text-muted); }
+    .billed-date { font-size: 0.88rem; color: var(--text-muted); white-space: nowrap; }
+
+    /* Action Buttons */
+    .cust-actions { text-align: center; white-space: nowrap; }
+    .cust-act {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: var(--bg-dark);
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: all 0.2s;
+        position: relative;
+    }
+    .cust-act:hover { border-color: var(--accent); color: var(--accent); background: rgba(245,158,11,0.1); }
+    .cust-act.act-jobs:hover { border-color: #22c55e; color: #4ade80; background: rgba(34,197,94,0.1); }
+    .cust-act.act-del:hover { border-color: #ef4444; color: #f87171; background: rgba(239,68,68,0.1); }
+    .cust-act svg { width: 15px; height: 15px; }
+    .cust-act .tip {
+        position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+        background: #000; color: #fff; font-size: 0.75rem; padding: 4px 8px;
+        border-radius: 4px; white-space: nowrap; opacity: 0; pointer-events: none;
+        transition: opacity 0.15s; margin-bottom: 4px; border: 1px solid rgba(255,255,255,0.1);
+    }
+    .cust-act:hover .tip { opacity: 1; }
+
+    /* Empty */
+    .cust-empty { padding: 60px 20px; text-align: center; }
+    .cust-empty svg { color: #444; margin-bottom: 16px; }
+    .cust-empty h3 { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .cust-empty p { font-size: 0.93rem; color: var(--text-muted); }
+
+    /* Card */
+    .cust-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+    }
+
+    /* No results message */
+    .cust-no-results {
+        display: none;
+        padding: 40px 20px;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+</style>
+
+
+<div class="container-fluid px-4 py-4 cust-page">
+    <div class="cust-card">
+        <div class="cust-header">
+            <div>
+                <h1>Customers</h1>
+                <div class="header-sub">Manage your customer base</div>
             </div>
+            <a href="{% url 'add-customer' %}" class="btn-add-cust">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Customer
+            </a>
+        </div>
+
+        <div class="cust-stats">
+            <div class="cust-stat"><div class="cust-stat-label">Mechanic</div><div class="cust-stat-val amber" id="stat-mech">{{ mechanic_customers|length }}</div></div>
+            <div class="cust-stat"><div class="cust-stat-label">Non-Mechanic</div><div class="cust-stat-val" id="stat-nonmech">{{ non_mechanic_customers|length }}</div></div>
+            <div class="cust-stat"><div class="cust-stat-label">Total Customers</div><div class="cust-stat-val green" id="stat-total">0</div></div>
+            <div class="cust-stat"><div class="cust-stat-label">Outstanding Dues</div><div class="cust-stat-val red" id="stat-dues">&#x20B9;0</div></div>
+        </div>
+
+        <div class="cust-toolbar">
+            <div class="cust-search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="customer-search" placeholder="Search by name or mobile...">
+            </div>
+        </div>
+
+        <div class="cust-tabs">
+            <button class="cust-tab-btn active" data-tab="mechanic">
+                <i class="bi bi-wrench" style="margin-right:4px;font-size:13px;"></i>Mechanic
+                <span class="tab-count" id="count-mech">0</span>
+            </button>
+            <button class="cust-tab-btn" data-tab="non-mechanic">
+                <i class="bi bi-person" style="margin-right:4px;font-size:13px;"></i>Non-Mechanic
+                <span class="tab-count" id="count-nonmech">0</span>
+            </button>
+        </div>
+
+        <!-- Mechanic Panel -->
+        <div class="cust-panel active" id="panel-mechanic">
+            <div class="cust-table-wrap">
+                <table class="cust-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50px">No.</th>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th class="text-right">Balance</th>
+                            <th class="text-right">Dues</th>
+                            <th class="text-right">Last Billed</th>
+                            <th>Billed Date</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in mechanic_customers %}
+                        <tr data-dues="{{ customer.dues }}">
+                            <td class="row-num">{{ forloop.counter }}</td>
+                            <td><span class="cust-name">{{ customer.customer_name }}</span></td>
+                            <td><span class="cust-mob">{{ customer.customer_mob_no }}</span></td>
+                            <td class="money {% if customer.balance > 0 %}positive{% elif customer.balance < 0 %}negative{% else %}zero{% endif %}">&#x20B9;{{ customer.balance|floatformat:2 }}</td>
+                            <td class="money {% if customer.dues > 0 %}negative{% else %}zero{% endif %}">&#x20B9;{{ customer.dues|floatformat:2 }}</td>
+                            <td class="money">&#x20B9;{{ customer.last_billed_amount|floatformat:2 }}</td>
+                            <td class="billed-date">{{ customer.last_billed_date|date:"d M Y"|default:"&#8212;" }}</td>
+                            <td class="cust-actions">
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="{% url 'edit-customer' customer.id %}" class="cust-act"><span class="tip">Edit</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>
+                                    <a href="{% url 'customer_jobs' customer.id %}" class="cust-act act-jobs"><span class="tip">Jobs</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></a>
+                                    <a href="{% url 'delete-customer' customer.id %}" class="cust-act act-del"><span class="tip">Delete</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr class="empty-row">
+                            <td colspan="8">
+                                <div class="cust-empty">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                    <h3>No mechanic customers</h3>
+                                    <p>Add your first mechanic customer to get started.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="cust-no-results" id="no-results-mechanic">No customers match your search.</div>
+        </div>
+
+        <!-- Non-Mechanic Panel -->
+        <div class="cust-panel" id="panel-non-mechanic">
+            <div class="cust-table-wrap">
+                <table class="cust-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50px">No.</th>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th class="text-right">Balance</th>
+                            <th class="text-right">Dues</th>
+                            <th class="text-right">Last Billed</th>
+                            <th>Billed Date</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in non_mechanic_customers %}
+                        <tr data-dues="{{ customer.dues }}">
+                            <td class="row-num">{{ forloop.counter }}</td>
+                            <td><span class="cust-name">{{ customer.customer_name }}</span></td>
+                            <td><span class="cust-mob">{{ customer.customer_mob_no }}</span></td>
+                            <td class="money {% if customer.balance > 0 %}positive{% elif customer.balance < 0 %}negative{% else %}zero{% endif %}">&#x20B9;{{ customer.balance|floatformat:2 }}</td>
+                            <td class="money {% if customer.dues > 0 %}negative{% else %}zero{% endif %}">&#x20B9;{{ customer.dues|floatformat:2 }}</td>
+                            <td class="money">&#x20B9;{{ customer.last_billed_amount|floatformat:2 }}</td>
+                            <td class="billed-date">{{ customer.last_billed_date|date:"d M Y"|default:"&#8212;" }}</td>
+                            <td class="cust-actions">
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="{% url 'edit-customer' customer.id %}" class="cust-act"><span class="tip">Edit</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>
+                                    <a href="{% url 'customer_jobs' customer.id %}" class="cust-act act-jobs"><span class="tip">Jobs</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></a>
+                                    <a href="{% url 'delete-customer' customer.id %}" class="cust-act act-del"><span class="tip">Delete</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr class="empty-row">
+                            <td colspan="8">
+                                <div class="cust-empty">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                    <h3>No non-mechanic customers</h3>
+                                    <p>Add your first non-mechanic customer to get started.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="cust-no-results" id="no-results-non-mechanic">No customers match your search.</div>
         </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('customer-search');
-    searchInput.addEventListener('keyup', function() {
-        const query = this.value.toLowerCase();
-        document.querySelectorAll('.tab-content tbody tr').forEach(function(row) {
-            const name = row.cells[0]?.textContent.toLowerCase() || '';
-            const contact = row.cells[2]?.textContent.toLowerCase() || '';
-            if (name.includes(query) || contact.includes(query)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
+    var fmt = function(v) { return '\u20B9' + v.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}); };
+
+    // Stats
+    var allRows = document.querySelectorAll('.cust-table tbody tr[data-dues]');
+    var mechCount = document.querySelectorAll('#panel-mechanic tbody tr[data-dues]').length;
+    var nonMechCount = document.querySelectorAll('#panel-non-mechanic tbody tr[data-dues]').length;
+    var totalDues = 0;
+    allRows.forEach(function(r) { totalDues += parseFloat(r.dataset.dues) || 0; });
+
+    document.getElementById('stat-total').textContent = mechCount + nonMechCount;
+    document.getElementById('stat-dues').textContent = fmt(totalDues);
+    document.getElementById('count-mech').textContent = mechCount;
+    document.getElementById('count-nonmech').textContent = nonMechCount;
+
+    // Tabs
+    var tabBtns = document.querySelectorAll('.cust-tab-btn');
+    tabBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            tabBtns.forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            document.querySelectorAll('.cust-panel').forEach(function(p) { p.classList.remove('active'); });
+            document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Search
+    var searchInput = document.getElementById('customer-search');
+    searchInput.addEventListener('input', function() {
+        var q = this.value.toLowerCase();
+
+        ['mechanic', 'non-mechanic'].forEach(function(tab) {
+            var rows = document.querySelectorAll('#panel-' + tab + ' tbody tr[data-dues]');
+            var visible = 0;
+            rows.forEach(function(row) {
+                var name = row.querySelector('.cust-name');
+                var mob = row.querySelector('.cust-mob');
+                var text = ((name ? name.textContent : '') + ' ' + (mob ? mob.textContent : '')).toLowerCase();
+                if (text.includes(q)) {
+                    row.style.display = '';
+                    visible++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            var noResults = document.getElementById('no-results-' + tab);
+            var emptyRow = document.querySelector('#panel-' + tab + ' .empty-row');
+            if (rows.length > 0) {
+                noResults.style.display = visible === 0 ? 'block' : 'none';
             }
         });
     });

@@ -1,4 +1,4 @@
-from django.utils.timezone import now
+from django.utils.timezone import localdate
 from django_select2 import forms as s2forms
 
 from svc.models import JobItem, Item, Vehicle
@@ -13,7 +13,7 @@ class JobForm(forms.ModelForm):
                                       required=False, label="Customer Type")
     job_date = forms.DateField(
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        initial=now
+        initial=localdate
     )
     vehicle = forms.ModelChoiceField(
         queryset=Vehicle.objects.all(),

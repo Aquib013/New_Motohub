@@ -1,0 +1,816 @@
+{% extends 'base.html' %}
+{% block title %}{{ vendor.firm_name }} – History{% endblock %}
+
+{% block content %}
+<style>
+    .vh-page { color: var(--text-primary); }
+
+    /* Header */
+    .vh-header {
+        background: var(--bg-sidebar);
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 24px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .vh-header h1 {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+    }
+    .vh-header .header-sub { font-size: 0.83rem; color: var(--text-muted); margin-top: 3px; }
+    .vh-header-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-back {
+        background: none;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--text-muted);
+        padding: 9px 18px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-back:hover { border-color: rgba(255,255,255,0.25); color: var(--text-primary); }
+    .btn-pay {
+        background: var(--accent);
+        color: var(--bg-dark);
+        border: none;
+        padding: 9px 22px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-pay:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+    }
+
+    /* Stats */
+    .vh-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    .vh-stat {
+        padding: 16px 24px;
+        border-right: 1px solid var(--border-subtle);
+        background: var(--bg-card);
+    }
+    .vh-stat:last-child { border-right: none; }
+    .vh-stat-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: 3px;
+    }
+    .vh-stat-val {
+        font-size: 1.45rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #fff;
+    }
+    .vh-stat-val.amber  { color: var(--accent); }
+    .vh-stat-val.green  { color: #4ade80; }
+    .vh-stat-val.red    { color: #f87171; }
+
+    /* Tabs */
+    .vh-tabs {
+        display: flex;
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 0 24px;
+    }
+    .vh-tab-btn {
+        padding: 13px 26px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+        letter-spacing: 0.02em;
+    }
+    .vh-tab-btn:hover { color: var(--text-primary); }
+    .vh-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .vh-tab-btn .tab-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-left: 6px;
+        background: rgba(255,255,255,0.06);
+        color: var(--text-muted);
+    }
+    .vh-tab-btn.active .tab-count {
+        background: rgba(245,158,11,0.15);
+        color: var(--accent);
+    }
+
+    /* Panels */
+    .vh-panel { display: none; }
+    .vh-panel.active { display: block; }
+
+    /* ── PO Table ── */
+    .vh-table-wrap { overflow-x: auto; }
+    .vh-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+    .vh-table thead th {
+        padding: 12px 16px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        background: var(--bg-sidebar);
+        border-bottom: 1px solid var(--border-subtle);
+        white-space: nowrap;
+        text-align: left;
+    }
+    .vh-table thead th.text-right { text-align: right; }
+    .vh-table thead th.text-center { text-align: center; }
+    .vh-table tbody tr.po-row {
+        border-bottom: 1px solid var(--border-subtle);
+        transition: background 0.15s;
+        cursor: pointer;
+    }
+    .vh-table tbody tr.po-row:hover { background: rgba(255,255,255,0.03); }
+    .vh-table tbody td {
+        padding: 14px 16px;
+        vertical-align: middle;
+    }
+
+    /* Expand toggle */
+    .expand-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: var(--bg-dark);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+    .expand-btn svg { width: 12px; height: 12px; transition: transform 0.2s; }
+    .expand-btn.open svg { transform: rotate(90deg); }
+    .expand-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .po-number {
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        color: var(--accent);
+    }
+    .po-date { font-size: 0.88rem; color: var(--text-muted); }
+    .po-amount {
+        font-weight: 700;
+        font-size: 0.95rem;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+        white-space: nowrap;
+        color: #fff;
+    }
+
+    /* Items sub-row */
+    .items-row { display: none; }
+    .items-row.open { display: table-row; }
+    .items-inner {
+        background: rgba(0,0,0,0.25);
+        border-top: 1px solid var(--border-subtle);
+    }
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+    }
+    .items-table thead th {
+        padding: 9px 16px;
+        font-size: 0.73rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        background: rgba(0,0,0,0.2);
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        text-align: left;
+        white-space: nowrap;
+    }
+    .items-table thead th.text-right { text-align: right; }
+    .items-table tbody td {
+        padding: 10px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+    .items-table tbody tr:last-child td { border-bottom: none; }
+    .item-name { font-weight: 600; color: #fff; }
+    .mono {
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+        white-space: nowrap;
+    }
+    .discount-badge {
+        display: inline-block;
+        background: rgba(245,158,11,0.12);
+        color: var(--accent);
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 4px;
+    }
+    .items-total-row td {
+        font-weight: 700;
+        background: rgba(255,255,255,0.03);
+        border-top: 1px solid rgba(255,255,255,0.08) !important;
+        border-bottom: none !important;
+    }
+
+    /* ── Payments ── */
+    .payments-list { padding: 8px 0; }
+    .payment-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-subtle);
+        transition: background 0.15s;
+    }
+    .payment-item:last-child { border-bottom: none; }
+    .payment-item:hover { background: rgba(255,255,255,0.02); }
+    .payment-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(74,222,128,0.12);
+        border: 1px solid rgba(74,222,128,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: #4ade80;
+    }
+    .payment-icon svg { width: 16px; height: 16px; }
+    .payment-body { flex: 1; min-width: 0; }
+    .payment-title { font-weight: 600; color: #fff; font-size: 0.95rem; }
+    .payment-meta { font-size: 0.83rem; color: var(--text-muted); margin-top: 2px; }
+    .payment-comment {
+        font-size: 0.83rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+        font-style: italic;
+    }
+    .payment-amount {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #4ade80;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* Empty state */
+    .vh-empty {
+        padding: 60px 20px;
+        text-align: center;
+    }
+    .vh-empty svg { color: #444; margin-bottom: 16px; }
+    .vh-empty h3 { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .vh-empty p { font-size: 0.93rem; color: var(--text-muted); }
+
+    /* Card */
+    .vh-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+    }
+
+    /* ── Payment Modal ── */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        width: 100%;
+        max-width: 420px;
+        padding: 28px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .modal-title {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 4px;
+    }
+    .modal-sub { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 22px; }
+    .modal-field { margin-bottom: 16px; }
+    .modal-field label {
+        display: block;
+        font-size: 0.83rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+    }
+    .modal-field input,
+    .modal-field textarea {
+        width: 100%;
+        background: var(--bg-dark);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 7px;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+    }
+    .modal-field input:focus,
+    .modal-field textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(245,158,11,0.15);
+    }
+    .modal-field textarea { resize: vertical; min-height: 80px; }
+    .modal-balance-info {
+        background: rgba(245,158,11,0.08);
+        border: 1px solid rgba(245,158,11,0.2);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .modal-balance-info span { font-size: 0.88rem; color: var(--text-muted); }
+    .modal-balance-info strong { font-size: 1rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 6px; }
+    .btn-modal-cancel {
+        flex: 1;
+        background: none;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--text-muted);
+        padding: 10px;
+        border-radius: 7px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-modal-cancel:hover { border-color: rgba(255,255,255,0.25); color: var(--text-primary); }
+    .btn-modal-submit {
+        flex: 2;
+        background: var(--accent);
+        color: var(--bg-dark);
+        border: none;
+        padding: 10px;
+        border-radius: 7px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-modal-submit:hover { background: var(--accent-hover); }
+
+    /* Payment action buttons */
+    .vp-act {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: var(--bg-dark);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+    .vp-act svg { width: 14px; height: 14px; }
+    .vp-act:hover { border-color: var(--accent); color: var(--accent); background: rgba(245,158,11,0.1); }
+    .vp-act.vp-act-del:hover { border-color: #ef4444; color: #f87171; background: rgba(239,68,68,0.1); }
+
+    /* Django messages */
+    .vh-messages { padding: 12px 24px 0; }
+    .vh-alert {
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+    .vh-alert.success { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
+    .vh-alert.error   { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
+</style>
+
+{% if messages %}
+<div class="vh-messages">
+    {% for message in messages %}
+    <div class="vh-alert {% if message.tags == 'success' %}success{% else %}error{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="container-fluid px-4 py-4 vh-page">
+    <div class="vh-card">
+
+        <!-- Header -->
+        <div class="vh-header">
+            <div>
+                <h1>{{ vendor.firm_name }}</h1>
+                <div class="header-sub">{{ vendor.vendor_name }} &nbsp;·&nbsp; {{ vendor.vendor_contact_no }}</div>
+            </div>
+            <div class="vh-header-actions">
+                <a href="{% url 'vendors' %}" class="btn-back">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                    Back
+                </a>
+                <button class="btn-pay" onclick="openPayModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Record Payment
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="vh-stats">
+            <div class="vh-stat">
+                <div class="vh-stat-label">Total Purchased</div>
+                <div class="vh-stat-val amber">₹{{ total_po_amount|floatformat:2 }}</div>
+            </div>
+            <div class="vh-stat">
+                <div class="vh-stat-label">Total Paid</div>
+                <div class="vh-stat-val green">₹{{ total_paid|floatformat:2 }}</div>
+            </div>
+            <div class="vh-stat">
+                <div class="vh-stat-label">Balance Due</div>
+                <div class="vh-stat-val {% if vendor.vendor_balance > 0 %}red{% else %}green{% endif %}">
+                    ₹{{ vendor.vendor_balance|floatformat:2 }}
+                </div>
+            </div>
+            <div class="vh-stat">
+                <div class="vh-stat-label">Last Payment</div>
+                <div class="vh-stat-val" style="font-size:1.1rem;">
+                    {% if vendor.last_payment_date %}
+                        ₹{{ vendor.last_payment_amount|floatformat:2 }}
+                        <div style="font-size:0.8rem;font-weight:400;color:var(--text-muted);margin-top:2px;">
+                            {{ vendor.last_payment_date|date:"d M Y" }}
+                        </div>
+                    {% else %}
+                        <span style="color:var(--text-muted);font-size:1rem;">—</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="vh-stat">
+                <div class="vh-stat-label">Opening Balance</div>
+                <div class="vh-stat-val" style="font-size:1.1rem;">₹{{ vendor.vendor_opening_balance|floatformat:2 }}</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="vh-tabs">
+            <button class="vh-tab-btn active" data-tab="pos">
+                <i class="bi bi-receipt" style="margin-right:5px;font-size:13px;"></i>
+                Purchase Orders
+                <span class="tab-count">{{ purchase_orders|length }}</span>
+            </button>
+            <button class="vh-tab-btn" data-tab="payments">
+                <i class="bi bi-cash-stack" style="margin-right:5px;font-size:13px;"></i>
+                Payments
+                <span class="tab-count">{{ payments|length }}</span>
+            </button>
+        </div>
+
+        <!-- Purchase Orders Panel -->
+        <div class="vh-panel active" id="panel-pos">
+            {% if purchase_orders %}
+            <div class="vh-table-wrap">
+                <table class="vh-table">
+                    <thead>
+                        <tr>
+                            <th style="width:44px;"></th>
+                            <th>PO Number</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th class="text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for po in purchase_orders %}
+                        {% with items=po.purchase_order_item.all %}
+                        <!-- PO Row -->
+                        <tr class="po-row" onclick="toggleItems('{{ po.id }}')">
+                            <td>
+                                <div class="expand-btn" id="btn-po-{{ po.id }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                                </div>
+                            </td>
+                            <td><span class="po-number">{{ po.po_number }}</span></td>
+                            <td><span class="po-date">{{ po.po_date|date:"d M Y" }}</span></td>
+                            <td><span style="font-size:0.88rem;color:var(--text-muted);">{{ items|length }} item{{ items|length|pluralize }}</span></td>
+                            <td class="po-amount">₹{{ po.po_amount|floatformat:2 }}</td>
+                        </tr>
+                        <!-- Expandable items sub-row -->
+                        <tr class="items-row" id="po-{{ po.id }}">
+                            <td colspan="5" style="padding:0;border-bottom:1px solid var(--border-subtle);">
+                                <div class="items-inner">
+                                    {% if items %}
+                                    <table class="items-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Item</th>
+                                                <th class="text-right">MRP</th>
+                                                <th class="text-right">Discount</th>
+                                                <th class="text-right">Unit Price</th>
+                                                <th class="text-right">Qty</th>
+                                                <th class="text-right">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in items %}
+                                            <tr>
+                                                <td><span class="item-name">{{ item.item.item_name }}</span></td>
+                                                <td class="mono">₹{{ item.item_MRP|floatformat:1 }}</td>
+                                                <td class="mono">
+                                                    {% if item.discount_percentage %}
+                                                        <span class="discount-badge">{{ item.discount_percentage }}%</span>
+                                                    {% elif item.net_price %}
+                                                        <span class="discount-badge">Net ₹{{ item.net_price }}</span>
+                                                    {% else %}—{% endif %}
+                                                </td>
+                                                <td class="mono">₹{{ item.unit_price|floatformat:0 }}</td>
+                                                <td class="mono">{{ item.quantity }}</td>
+                                                <td class="mono" style="color:#fff;font-weight:600;">₹{{ item.total_amount|floatformat:0 }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                            <tr class="items-total-row">
+                                                <td colspan="5" style="text-align:right;padding-right:14px;color:var(--text-muted);font-size:0.88rem;">PO Total</td>
+                                                <td class="mono" style="color:#fff;">₹{{ po.po_amount|floatformat:2 }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    {% else %}
+                                    <p style="padding:14px 16px;color:var(--text-muted);font-size:0.88rem;margin:0;">No items in this PO.</p>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="vh-empty">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <h3>No Purchase Orders</h3>
+                <p>No POs have been created for this vendor yet.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Payments Panel -->
+        <div class="vh-panel" id="panel-payments">
+            {% if payments %}
+            <div class="payments-list">
+                {% for payment in payments %}
+                <div class="payment-item">
+                    <div class="payment-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="payment-body">
+                        <div class="payment-title">Payment to {{ vendor.firm_name }}</div>
+                        <div class="payment-meta">{{ payment.created_at|date:"d M Y, h:i A" }}</div>
+                        {% if payment.comment %}
+                        <div class="payment-comment">{{ payment.comment }}</div>
+                        {% endif %}
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                        <div class="payment-amount">₹{{ payment.amount|floatformat:2 }}</div>
+                        <button class="vp-act"
+                            onclick="openEditModal('{{ payment.pk }}','{{ payment.amount }}','{{ payment.comment|escapejs }}')"
+                            title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button class="vp-act vp-act-del"
+                            onclick="openDeleteModal('{{ payment.pk }}','{{ payment.amount }}')"
+                            title="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="vh-empty">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <h3>No Payments Yet</h3>
+                <p>Record a payment using the button above.</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div><!-- /.vh-card -->
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="pay-modal" onclick="closePayModalOnOverlay(event)">
+    <div class="modal-box">
+        <div class="modal-title">Record Payment</div>
+        <div class="modal-sub">Payment to {{ vendor.firm_name }}</div>
+
+        <div class="modal-balance-info">
+            <span>Current Balance Due</span>
+            <strong>₹{{ vendor.vendor_balance|floatformat:2 }}</strong>
+        </div>
+
+        <form method="post" action="{% url 'vendor_add_payment' vendor.pk %}">
+            {% csrf_token %}
+            <div class="modal-field">
+                <label for="id_amount">Amount (₹)</label>
+                <input type="number" id="id_amount" name="amount" step="0.01" min="0.01"
+                       placeholder="Enter amount" required>
+            </div>
+            <div class="modal-field">
+                <label for="id_comment">Note (optional)</label>
+                <textarea id="id_comment" name="comment" placeholder="e.g. Partial payment for PO #ABC…"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closePayModal()">Cancel</button>
+                <button type="submit" class="btn-modal-submit">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="margin-right:6px;vertical-align:middle;"><polyline points="20 6 9 17 4 12"/></svg>
+                    Confirm Payment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Tabs
+    document.querySelectorAll('.vh-tab-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.vh-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelectorAll('.vh-panel').forEach(function(p) { p.classList.remove('active'); });
+            btn.classList.add('active');
+            document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // PO expand/collapse
+    function toggleItems(poId) {
+        var row = document.getElementById('po-' + poId);
+        var btn = document.getElementById('btn-po-' + poId);
+        var isOpen = row.classList.contains('open');
+        row.classList.toggle('open', !isOpen);
+        btn.classList.toggle('open', !isOpen);
+    }
+
+    // Payment modal
+    function openPayModal() {
+        document.getElementById('pay-modal').classList.add('open');
+        document.getElementById('id_amount').focus();
+    }
+    function closePayModal() {
+        document.getElementById('pay-modal').classList.remove('open');
+    }
+    function closePayModalOnOverlay(e) {
+        if (e.target === document.getElementById('pay-modal')) closePayModal();
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closePayModal();
+    });
+
+    // Auto-open modal if there's an error message (form was invalid)
+    {% if messages %}
+    {% for message in messages %}
+    {% if message.tags == 'error' %}
+    openPayModal();
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+
+    // Edit payment modal
+    function openEditModal(pk, amount, comment) {
+        document.getElementById('edit-amount').value = amount;
+        document.getElementById('edit-comment').value = comment || '';
+        document.getElementById('edit-form').action = '/vendors/' + {{ vendor.pk }} + '/payment/' + pk + '/edit/';
+        document.getElementById('edit-modal').classList.add('open');
+        document.getElementById('edit-amount').focus();
+    }
+    function closeEditModal() {
+        document.getElementById('edit-modal').classList.remove('open');
+    }
+
+    // Delete payment modal
+    function openDeleteModal(pk, amount) {
+        document.getElementById('delete-amount-display').textContent = '₹' + parseFloat(amount).toLocaleString('en-IN', {minimumFractionDigits:2});
+        document.getElementById('delete-form').action = '/vendors/' + {{ vendor.pk }} + '/payment/' + pk + '/delete/';
+        document.getElementById('delete-modal').classList.add('open');
+    }
+    function closeDeleteModal() {
+        document.getElementById('delete-modal').classList.remove('open');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { closeEditModal(); closeDeleteModal(); }
+    });
+    document.getElementById('edit-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditModal();
+    });
+    document.getElementById('delete-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+</script>
+
+<!-- Edit Payment Modal -->
+<div class="modal-overlay" id="edit-modal">
+    <div class="modal-box">
+        <div class="modal-title">Edit Payment</div>
+        <div class="modal-sub">Update payment details for {{ vendor.firm_name }}</div>
+        <form method="post" id="edit-form" action="">
+            {% csrf_token %}
+            <div class="modal-field">
+                <label for="edit-amount">Amount (₹)</label>
+                <input type="number" id="edit-amount" name="amount" step="0.01" min="0.01" required>
+            </div>
+            <div class="modal-field">
+                <label for="edit-comment">Note (optional)</label>
+                <textarea id="edit-comment" name="comment" placeholder="e.g. Partial payment for PO #ABC..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closeEditModal()">Cancel</button>
+                <button type="submit" class="btn-modal-submit">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="delete-modal">
+    <div class="modal-box">
+        <div class="modal-title" style="color:#f87171;">Delete Payment</div>
+        <div class="modal-sub">This action cannot be undone.</div>
+        <div class="modal-balance-info" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2);">
+            <span>Payment amount</span>
+            <strong id="delete-amount-display" style="color:#f87171;">0.00</strong>
+        </div>
+        <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:20px;">
+            Deleting this payment will recalculate the vendor balance automatically.
+        </p>
+        <form method="post" id="delete-form" action="">
+            {% csrf_token %}
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button type="submit" class="btn-modal-submit" style="background:#ef4444;flex:1;">Yes, Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

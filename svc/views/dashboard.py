@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.utils.timezone import localdate
 from django.views.generic import TemplateView
 
 from svc.models import Item
@@ -10,7 +11,7 @@ class DashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        today = timezone.now().date()
+        today = localdate()
 
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')

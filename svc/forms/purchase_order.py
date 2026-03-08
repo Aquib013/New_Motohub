@@ -1,5 +1,5 @@
 from django import forms
-from django.utils.timezone import now
+from django.utils.timezone import localdate
 
 from svc.models import PurchaseOrder
 
@@ -7,7 +7,7 @@ from svc.models import PurchaseOrder
 class PurchaseOrderForm(forms.ModelForm):
     po_date = forms.DateField(
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        initial=now
+        initial=localdate
     )
 
     class Meta:

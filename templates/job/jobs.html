@@ -17,14 +17,14 @@
     }
     .jobs-header h1 {
         font-family: 'Rajdhani', sans-serif;
-        font-size: 1.5rem;
+        font-size: 1.65rem;
         font-weight: 700;
         color: #fff;
         margin: 0;
         letter-spacing: 0.5px;
     }
     .jobs-header .header-subtitle {
-        font-size: 0.75rem;
+        font-size: 0.83rem;
         color: var(--text-muted);
         margin-top: 2px;
     }
@@ -35,7 +35,7 @@
         padding: 10px 22px;
         border-radius: 8px;
         font-weight: 600;
-        font-size: 0.875rem;
+        font-size: 0.95rem;
         text-decoration: none;
         transition: all 0.2s;
         display: inline-flex;
@@ -62,7 +62,7 @@
     }
     .stat-card:last-child { border-right: none; }
     .stat-label {
-        font-size: 0.68rem;
+        font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -70,7 +70,7 @@
         margin-bottom: 2px;
     }
     .stat-value {
-        font-size: 1.3rem;
+        font-size: 1.45rem;
         font-weight: 700;
         color: #fff;
         letter-spacing: -0.02em;
@@ -96,7 +96,7 @@
         gap: 10px;
     }
     .filter-group label {
-        font-size: 0.8rem;
+        font-size: 0.88rem;
         font-weight: 600;
         color: var(--text-muted);
         text-transform: uppercase;
@@ -108,7 +108,7 @@
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
         padding: 7px 12px;
-        font-size: 0.85rem;
+        font-size: 0.93rem;
         color: var(--text-primary);
         outline: none;
         transition: border-color 0.2s;
@@ -124,7 +124,7 @@
         border: none;
         padding: 7px 18px;
         border-radius: 6px;
-        font-size: 0.8rem;
+        font-size: 0.88rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
@@ -136,7 +136,7 @@
         color: var(--text-muted);
         padding: 7px 14px;
         border-radius: 6px;
-        font-size: 0.8rem;
+        font-size: 0.88rem;
         text-decoration: none;
         transition: all 0.2s;
     }
@@ -147,7 +147,7 @@
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
         padding: 7px 12px 7px 34px;
-        font-size: 0.85rem;
+        font-size: 0.93rem;
         width: 220px;
         color: var(--text-primary);
         outline: none;
@@ -162,11 +162,11 @@
     .jobs-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.875rem;
+        font-size: 0.95rem;
     }
     .jobs-table thead th {
         padding: 12px 16px;
-        font-size: 0.7rem;
+        font-size: 0.78rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
@@ -191,15 +191,15 @@
     .job-no {
         font-weight: 700;
         font-family: 'Courier New', monospace;
-        font-size: 0.82rem;
+        font-size: 0.9rem;
         color: var(--accent);
     }
     .customer-name { font-weight: 600; color: #fff; }
-    .vehicle-info { color: var(--text-muted); font-size: 0.82rem; }
+    .vehicle-info { color: var(--text-muted); font-size: 0.9rem; }
     .reg-no {
         font-family: 'Courier New', monospace;
         font-weight: 600;
-        font-size: 0.82rem;
+        font-size: 0.9rem;
         background: rgba(255,255,255,0.06);
         padding: 3px 8px;
         border-radius: 4px;
@@ -214,7 +214,7 @@
         gap: 5px;
         padding: 4px 10px;
         border-radius: 20px;
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
@@ -250,7 +250,7 @@
     /* Amounts */
     .amount { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
     .amount-paid { color: #4ade80; }
-    .amount-due { color: #f87171; font-size: 0.75rem; }
+    .amount-due { color: #f87171; font-size: 0.83rem; }
 
     /* Action Buttons */
     .actions-cell { text-align: center; white-space: nowrap; }
@@ -291,7 +291,7 @@
         transform: translateX(-50%);
         background: #000;
         color: #fff;
-        font-size: 0.68rem;
+        font-size: 0.75rem;
         padding: 4px 8px;
         border-radius: 4px;
         white-space: nowrap;
@@ -306,8 +306,8 @@
     /* Empty State */
     .empty-state { padding: 60px 20px; text-align: center; }
     .empty-state svg { color: #444; margin-bottom: 16px; }
-    .empty-state h3 { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-    .empty-state p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
+    .empty-state h3 { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .empty-state p { font-size: 0.93rem; color: var(--text-muted); margin-bottom: 16px; }
 
     /* Card Wrapper */
     .jobs-card {
@@ -380,7 +380,6 @@
                             <div class="d-flex justify-content-center gap-1">
                                 <a href="{% url 'job_detail' job.pk %}" class="action-btn"><span class="tip">View / Add Service</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
                                 <a href="{% url 'job_edit' job.pk %}" class="action-btn"><span class="tip">Edit Job</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>
-                                <a href="{% url 'job_edit' job.pk %}" class="action-btn success"><span class="tip">Add Payment</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></a>
                                 <a href="{% url 'generate_invoice' job.id %}" class="action-btn"><span class="tip">Invoice</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></a>
                                 <a href="{% url 'job_delete' job.pk %}" class="action-btn danger"><span class="tip">Delete</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></a>
                             </div>
@@ -412,13 +411,8 @@ document.addEventListener('DOMContentLoaded', function () {
     rows.forEach(function(row) {
         var s = row.dataset.status, a = parseFloat(row.dataset.amount)||0, p = parseFloat(row.dataset.paid)||0;
 
-        // If paid exceeds job amount, count the extra in total
-        if (p > a) {
-            totalAmount += p;
-        } else {
-            totalAmount += a;
-            totalDues += (a - p);
-        }
+        totalAmount += p;
+        if (p < a) totalDues += (a - p);
 
         // Update the per-row due display
         var dueEl = row.querySelector('.amount-due');

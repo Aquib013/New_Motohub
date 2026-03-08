@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.utils import timezone
+from django.utils.timezone import localdate
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from svc.models import PurchaseOrder
@@ -17,11 +18,11 @@ class PurchaseOrderListView(ListView):
         if selected_date:
             return PurchaseOrder.objects.filter(po_date=selected_date).order_by('po_number')
         else:
-            return PurchaseOrder.objects.filter(po_date=timezone.now().date()).order_by('po_number')
+            return PurchaseOrder.objects.filter(po_date=localdate()).order_by('po_number')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['selected_date'] = self.request.GET.get('date', timezone.now().date().isoformat())
+        context['selected_date'] = self.request.GET.get('date', localdate().isoformat())
         return context
 
 

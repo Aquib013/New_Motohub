@@ -3,11 +3,12 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.db.models import Sum, Q, OuterRef, Subquery
+from django.db.models import Sum, Q
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.timezone import localdate
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import (
     CreateView,
@@ -42,7 +43,6 @@ class JobCreateView(CreateView):
         return redirect(reverse('job_detail', kwargs={'pk': job.pk}))
 
     def form_invalid(self, form):
-        # Collect all form errors and add them as messages
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f"{form.fields[field].label}: {error}")
@@ -61,8 +61,9 @@ def search_customers(request):
         customers = customers.filter(customer_type=customer_type)
 
     customer_list = [
-        {'id': c.id, 'name': c.customer_name, 'mobile': c.customer_mob_no, 'customer_type': c.customer_type} for c in
-        customers]
+        {'id': c.id, 'name': c.customer_name, 'mobile': c.customer_mob_no, 'customer_type': c.customer_type}
+        for c in customers
+    ]
 
     if not customer_list:
         customer_list.append({
@@ -118,14 +119,14 @@ class JobListView(ListView):
         if selected_date:
             queryset = Job.objects.filter(job_date=selected_date)
         else:
-            queryset = Job.objects.filter(job_date=timezone.now().date())
+            queryset = Job.objects.filter(job_date=localdate())  # ← fixed
         return queryset.order_by('job_no')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         jobs = context['jobs']
         context['show_completion_time'] = any(job.status == "Completed" for job in jobs)
-        context['selected_date'] = self.request.GET.get('date', timezone.now().date().isoformat())
+        context['selected_date'] = self.request.GET.get('date', localdate().isoformat())  # ← fixed
         return context
 
 
@@ -137,7 +138,8 @@ class JobDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['services'] = Service.objects.filter(job=self.get_object())
-        context['total_service_cost'] = context['services'].aggregate(total_cost=Sum('service_cost'))['total_cost'] or 0
+        context['total_service_cost'] = context['services'].aggregate(
+            total_cost=Sum('service_cost'))['total_cost'] or 0
         return context
 
 
@@ -151,7 +153,8 @@ class JobUpdateView(UpdateView):
         form = super().get_form(form_class)
         if self.object.customer:
             form.fields['customer_type'].initial = self.object.customer.customer_type
-            form.fields['customer'].queryset = Customer.objects.filter(customer_type=self.object.customer.customer_type)
+            form.fields['customer'].queryset = Customer.objects.filter(
+                customer_type=self.object.customer.customer_type)
         return form
 
     def form_valid(self, form):
@@ -165,7 +168,6 @@ class JobUpdateView(UpdateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        # Collect all form errors and add them as messages
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f"{form.fields[field].label}: {error}")
@@ -175,7 +177,7 @@ class JobUpdateView(UpdateView):
 class JobDeleteView(DeleteView):
     model = Job
     template_name = "job/job_delete.html"
-    success_url = reverse_lazy('jobs')  # Replace with your job list URL name
+    success_url = reverse_lazy('jobs')
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()  # NOQA
